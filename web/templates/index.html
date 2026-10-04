@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURUM | Autonomous Prospect Intelligence</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --gold-primary: #d4af37;
+      --gold-light: #ebd68e;
+      --gold-dark: #997a2b;
+      --gold-glow: rgba(212, 175, 55, 0.15);
+      --bg-base: #070709;
+      --bg-surface: #0f0f13;
+      --border-subtle: #1c1c24;
+      --border-gold: rgba(212, 175, 55, 0.25);
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background-color: var(--bg-base);
+      color: #e2e8f0;
+      letter-spacing: -0.01em;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Architectural Obsidian & Gold Cards */
+    .aurum-card {
+      background: #0d0d12;
+      border: 1px solid #1a1a24;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .aurum-card:hover {
+      border-color: rgba(212, 175, 55, 0.4);
+      box-shadow: 0 12px 30px -10px rgba(212, 175, 55, 0.08);
+      transform: translateY(-2px);
+    }
+
+    /* Gold Buttons */
+    .btn-gold {
+      background: linear-gradient(135deg, #e6ca65, #c5a059);
+      color: #070709;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .btn-gold:hover {
+      background: linear-gradient(135deg, #f0d778, #d4af37);
+      box-shadow: 0 4px 20px rgba(212, 175, 55, 0.25);
+    }
+
+    .btn-gold-outline {
+      background: rgba(212, 175, 55, 0.04);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      color: #ebd68e;
+      transition: all 0.2s ease;
+    }
+    .btn-gold-outline:hover {
+      background: rgba(212, 175, 55, 0.1);
+      border-color: rgba(212, 175, 55, 0.6);
+      color: #ffffff;
+    }
+
+    /* Minimalist Badges */
+    .badge-gold {
+      background: rgba(212, 175, 55, 0.06);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      color: #dfbe62;
+    }
+    .badge-flaw {
+      background: rgba(248, 113, 113, 0.05);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      color: #fca5a5;
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #070709; }
+    ::-webkit-scrollbar-thumb { background: #262633; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f50; }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-[#d4af37] selection:text-black">
+
+  <!-- Minimalist Ambient Glow -->
+  <div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+    <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-[#d4af37]/[0.035] rounded-full blur-[140px]"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="border-b border-[#16161f] bg-[#09090d]/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Minimalist Emblem Logo -->
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-b from-[#221f14] to-[#12110b] border border-[#d4af37]/40 flex items-center justify-center text-[#d4af37] text-lg font-light shadow-sm">
+          ◈
+        </div>
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-sm tracking-[0.25em] uppercase font-bold text-white">AURUM</h1>
+            <span class="text-[9px] font-mono tracking-widest uppercase px-2 py-0.5 rounded border border-[#d4af37]/30 text-[#d4af37] bg-[#d4af37]/5">
+              AUTOPILOT ACTIVE
+            </span>
+          </div>
+          <p class="text-[11px] text-[#8e8e9f] font-light">
+            Autonomous Client Intelligence & Technical Opportunity Auditor
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Suite -->
+      <div class="flex items-center gap-3">
+        <!-- Self Healing Trigger -->
+        <button onclick="triggerSelfHeal()" id="self-heal-btn" class="px-3 py-2 rounded-xl border border-[#22222e] hover:border-[#d4af37]/40 text-[11px] text-[#9e9eaf] hover:text-[#d4af37] transition flex items-center gap-2 bg-[#0c0c10]" title="Execute Database Diagnostics & Integrity Check">
+          <i class="fa-solid fa-shield-halved text-xs text-[#d4af37]"></i>
+          <span>Self-Healing Loop</span>
+        </button>
+
+        <!-- Fresh Ingestion -->
+        <button onclick="triggerAutonomousCycle()" id="sweep-btn" class="px-4 py-2 rounded-xl btn-gold text-xs flex items-center gap-2">
+          <i class="fa-solid fa-bolt text-xs"></i>
+          <span>Harvest 15 Leads</span>
+        </button>
+
+        <!-- CSV Export -->
+        <a href="/api/export-csv" target="_blank" class="px-3.5 py-2 rounded-xl btn-gold-outline text-xs flex items-center gap-2">
+          <i class="fa-solid fa-arrow-down text-xs"></i>
+          <span>Export CSV</span>
+        </a>
+
+        <!-- Refresh -->
+        <button onclick="loadAllData()" class="p-2 rounded-xl border border-[#1e1e28] text-[#7e7e8f] hover:text-white hover:border-[#3e3e4f] transition bg-[#0c0c10]">
+          <i class="fa-solid fa-rotate-right text-xs"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Workstation -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 space-y-8">
+
+    <!-- KPI Metric Ribbons (Subtle, Muted, Gold Accents) -->
+    <section class="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+      <div class="p-4 rounded-2xl bg-[#0c0c10] border border-[#181822]">
+        <p class="text-[10px] uppercase tracking-wider text-[#7e7e8f] font-medium">Qualified Pipeline</p>
+        <p id="stat-total" class="text-2xl font-light text-white mt-1">0</p>
+        <span class="text-[10px] text-[#d4af37] font-mono">Verified in Database</span>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-[#0c0c10] border border-[#181822]">
+        <p class="text-[10px] uppercase tracking-wider text-[#7e7e8f] font-medium">Direct Inboxes</p>
+        <p id="stat-emails" class="text-2xl font-light text-white mt-1">0</p>
+        <span class="text-[10px] text-[#d4af37] font-mono">Corporate & Gmail</span>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-[#0c0c10] border border-[#181822]">
+        <p class="text-[10px] uppercase tracking-wider text-[#7e7e8f] font-medium">Direct Phones</p>
+        <p id="stat-phones" class="text-2xl font-light text-white mt-1">0</p>
+        <span class="text-[10px] text-[#d4af37] font-mono">India & Global Verified</span>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-[#0c0c10] border border-[#181822]">
+        <p class="text-[10px] uppercase tracking-wider text-[#7e7e8f] font-medium">Decision Makers</p>
+        <p id="stat-linkedin" class="text-2xl font-light text-white mt-1">0</p>
+        <span class="text-[10px] text-[#d4af37] font-mono">Founders & Leadership</span>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-[#0c0c10] border border-[#181822]">
+        <p class="text-[10px] uppercase tracking-wider text-[#7e7e8f] font-medium">Target Territories</p>
+        <p id="stat-countries" class="text-2xl font-light text-white mt-1">0</p>
+        <span class="text-[10px] text-[#d4af37] font-mono">India, USA, UK, Canada</span>
+      </div>
+    </section>
+
+    <!-- Real-time Diagnostics Bar (Hidden When Idle) -->
+    <div id="live-progress-container" class="hidden p-5 rounded-2xl bg-[#0c0c11] border border-[#d4af37]/30 space-y-3">
+      <div class="flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2 text-[#ebd68e] font-medium">
+          <i class="fa-solid fa-circle-notch fa-spin text-xs"></i>
+          <span id="live-action-status">Autonomous Sweep Active...</span>
+        </div>
+        <span id="live-progress-pct" class="mono font-semibold text-[#8e8e9f]">0%</span>
+      </div>
+      <div class="w-full bg-[#16161f] rounded-full h-1.5 overflow-hidden">
+        <div id="progress-bar-fill" class="bg-gradient-to-r from-[#d4af37] to-[#ebd68e] h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+      <div id="terminal-logs" class="bg-[#070709] p-3 rounded-xl mono text-[10px] text-[#8e8e9f] h-20 overflow-y-auto space-y-1 border border-[#161620]">
+        <div>[System] Diagnostics active...</div>
+      </div>
+    </div>
+
+    <!-- Navigation Control Bar -->
+    <section class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-3.5 rounded-2xl bg-[#0a0a0e] border border-[#161620]">
+      
+      <!-- Category Filters (Gold Border Accent When Active) -->
+      <div class="flex flex-wrap items-center gap-1.5">
+        <button onclick="setServiceFilter('')" id="pill-all" class="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-[#d4af37] text-black transition">
+          All Opportunities
+        </button>
+        <button onclick="setServiceFilter('Chatbots')" id="pill-Chatbots" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#8e8e9f] hover:text-white bg-[#0e0e13] border border-[#1a1a24] hover:border-[#d4af37]/40 transition">
+          Chatbot Needed
+        </button>
+        <button onclick="setServiceFilter('Web Development')" id="pill-Web" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#8e8e9f] hover:text-white bg-[#0e0e13] border border-[#1a1a24] hover:border-[#d4af37]/40 transition">
+          Web Dev Needed
+        </button>
+        <button onclick="setServiceFilter('App Development')" id="pill-App" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#8e8e9f] hover:text-white bg-[#0e0e13] border border-[#1a1a24] hover:border-[#d4af37]/40 transition">
+          Mobile App Needed
+        </button>
+        <button onclick="setServiceFilter('Automation')" id="pill-Auto" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#8e8e9f] hover:text-white bg-[#0e0e13] border border-[#1a1a24] hover:border-[#d4af37]/40 transition">
+          Automation & Pipelines
+        </button>
+      </div>
+
+      <!-- Search Input -->
+      <div class="flex items-center gap-3">
+        <div class="relative w-64">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-[#5e5e6f] text-xs"></i>
+          <input type="text" id="filter-search" oninput="debounceLoadLeads()" placeholder="Filter prospects..." 
+                 class="w-full pl-9 pr-3.5 py-1.5 bg-[#07070a] border border-[#1c1c26] rounded-xl text-xs text-white placeholder-[#5e5e6f] focus:outline-none focus:border-[#d4af37]/50 transition">
+        </div>
+
+        <!-- View Switcher -->
+        <div class="flex items-center bg-[#07070a] p-1 rounded-xl border border-[#1a1a24]">
+          <button onclick="setViewMode('cards')" id="view-cards-btn" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#d4af37] text-black transition">
+            Cards
+          </button>
+          <button onclick="setViewMode('table')" id="view-table-btn" class="px-2.5 py-1 rounded-lg text-xs font-medium text-[#7e7e8f] hover:text-white transition">
+            Table
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- CARDS VIEW (Luxury Minimalist Dossier) -->
+    <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Populated dynamically via JavaScript -->
+    </div>
+
+    <!-- TABLE VIEW (Alternative Minimalist Table) -->
+    <div id="table-container" class="hidden overflow-x-auto rounded-2xl border border-[#1a1a24] bg-[#0c0c10]">
+      <table class="w-full text-left text-xs text-[#cbd5e1]">
+        <thead class="bg-[#09090d] text-[#7e7e8f] font-mono uppercase text-[10px] tracking-wider border-b border-[#181822]">
+          <tr>
+            <th class="py-3.5 px-4 font-normal">Business & Link</th>
+            <th class="py-3.5 px-4 font-normal">Service Alignment</th>
+            <th class="py-3.5 px-4 font-normal">Established Strengths</th>
+            <th class="py-3.5 px-4 font-normal">Technical Vulnerability</th>
+            <th class="py-3.5 px-4 font-normal">Direct Contact</th>
+            <th class="py-3.5 px-4 text-right font-normal">Action</th>
+          </tr>
+        </thead>
+        <tbody id="table-body" class="divide-y divide-[#14141d] bg-[#0c0c10]">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="hidden py-24 text-center space-y-4">
+      <div class="w-12 h-12 mx-auto rounded-2xl border border-[#22222f] bg-[#0e0e14] flex items-center justify-center text-[#d4af37] text-lg">
+        ◇
+      </div>
+      <div>
+        <h3 class="text-sm font-medium text-white">No active leads match criteria</h3>
+        <p class="text-xs text-[#7e7e8f] mt-1 max-w-sm mx-auto">
+          Execute an autonomous sweep or adjust your filter parameters.
+        </p>
+      </div>
+      <button onclick="triggerAutonomousCycle()" class="px-4 py-2 rounded-xl btn-gold text-xs inline-flex items-center gap-2">
+        <i class="fa-solid fa-bolt text-xs"></i> Run Autonomous Sweep
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Confidential Outreach Proposition Modal -->
+  <div id="pitch-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-[#0c0c11] max-w-2xl w-full rounded-3xl p-7 space-y-5 border border-[#262633] shadow-2xl relative max-h-[92vh] overflow-y-auto">
+      
+      <button onclick="closeModal()" class="absolute top-6 right-6 text-[#7e7e8f] hover:text-white p-1.5 transition">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+
+      <!-- Modal Header -->
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span id="modal-service-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider badge-gold">
+            Service Match
+          </span>
+          <span id="modal-country-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-[#14141c] text-[#9e9eb0] border border-[#22222e]">
+            Territory
+          </span>
+        </div>
+        <h2 id="modal-company-name" class="text-xl font-light text-white tracking-tight pt-1">Company Name</h2>
+        <a id="modal-website-link" href="#" target="_blank" rel="noopener noreferrer" class="text-xs text-[#d4af37] hover:underline flex items-center gap-1.5 mono font-normal">
+          <span id="modal-domain">domain.com</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+        </a>
+      </div>
+
+      <!-- Business Dossier -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 bg-[#08080c] rounded-2xl border border-[#181822]">
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-[#6e6e7f] font-mono">Decision Maker</p>
+          <p id="modal-contact-name" class="text-xs font-medium text-white mt-0.5">Founding & Leadership Team</p>
+        </div>
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-[#6e6e7f] font-mono">Core Commercial Model</p>
+          <p id="modal-business-summary" class="text-xs text-[#cbd5e1] mt-0.5 leading-relaxed">Summary...</p>
+        </div>
+      </div>
+
+      <!-- Strengths vs Technical Flaw -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="p-4 rounded-2xl bg-[#090a0d] border border-[#1a1d17] space-y-1">
+          <p class="text-[10px] uppercase tracking-wider text-[#d4af37] font-mono flex items-center gap-1.5">
+            <span>✓</span> Established Advantage (The Praise)
+          </p>
+          <p id="modal-where-good" class="text-xs text-[#d1d5db] leading-relaxed">Strengths...</p>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-[#0a0809] border border-[#261517] space-y-1">
+          <p class="text-[10px] uppercase tracking-wider text-[#fca5a5] font-mono flex items-center gap-1.5">
+            <span>✕</span> Diagnosed Bottleneck (The Opportunity)
+          </p>
+          <p id="modal-where-lacking" class="text-xs text-[#cbd5e1] leading-relaxed">Weaknesses...</p>
+        </div>
+      </div>
+
+      <!-- Confident Outreach Proposition -->
+      <div class="p-4 rounded-2xl bg-[#08080c] border border-[#d4af37]/30 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-mono uppercase tracking-wider text-[#ebd68e] flex items-center gap-2">
+            <span>◈</span> Tailored Outreach Proposition
+          </span>
+          <button onclick="copyModalPitch()" id="copy-modal-pitch-btn" class="px-3 py-1 rounded-lg btn-gold text-xs flex items-center gap-1.5">
+            <i class="fa-regular fa-copy text-xs"></i>
+            Copy Proposition
+          </button>
+        </div>
+        <textarea id="modal-pitch-textarea" readonly rows="6" class="w-full text-xs text-[#e2e8f0] leading-relaxed font-mono bg-[#0c0c11] p-3.5 rounded-xl border border-[#1c1c28] resize-none focus:outline-none"></textarea>
+      </div>
+
+      <!-- Direct Channels -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="p-3 bg-[#08080c] rounded-xl border border-[#161620] space-y-1.5">
+          <p class="text-[10px] uppercase tracking-wider text-[#7e7e8f] font-mono">Direct Inboxes</p>
+          <div id="modal-emails" class="space-y-1 text-xs mono"></div>
+        </div>
+
+        <div class="p-3 bg-[#08080c] rounded-xl border border-[#161620] space-y-1.5">
+          <p class="text-[10px] uppercase tracking-wider text-[#7e7e8f] font-mono">Telephony & WhatsApp</p>
+          <div id="modal-phones" class="space-y-1 text-xs mono"></div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-end pt-2 border-t border-[#181824]">
+        <button onclick="closeModal()" class="px-5 py-2 rounded-xl border border-[#22222e] hover:border-[#383848] text-xs font-medium text-[#9e9eaf] transition bg-[#0e0e13]">
+          Close Dossier
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let currentLeads = [];
+    let activeModalLead = null;
+    let pollInterval = null;
+    let searchDebounceTimeout = null;
+    let selectedServiceFilter = '';
+    let currentViewMode = 'cards';
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      const cardsBtn = document.getElementById('view-cards-btn');
+      const tableBtn = document.getElementById('view-table-btn');
+      const cardsContainer = document.getElementById('cards-container');
+      const tableContainer = document.getElementById('table-container');
+
+      if (mode === 'cards') {
+        cardsBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#d4af37] text-black transition";
+        tableBtn.className = "px-2.5 py-1 rounded-lg text-xs font-medium text-[#7e7e8f] hover:text-white transition";
+        cardsContainer.classList.remove('hidden');
+        tableContainer.classList.add('hidden');
+      } else {
+        tableBtn.className = "px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#d4af37] text-black transition";
+        cardsBtn.className = "px-2.5 py-1 rounded-lg text-xs font-medium text-[#7e7e8f] hover:text-white transition";
+        tableContainer.classList.remove('hidden');
+        cardsContainer.classList.add('hidden');
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+        document.getElementById('stat-total').innerText = data.total_leads || 0;
+        document.getElementById('stat-emails').innerText = data.with_email || 0;
+        document.getElementById('stat-phones').innerText = data.with_phone || 0;
+        document.getElementById('stat-linkedin').innerText = data.with_linkedin || 0;
+        document.getElementById('stat-countries').innerText = data.country_count || 0;
+      } catch (e) {
+        console.error("Stats load error", e);
+      }
+    }
+
+    function setServiceFilter(svc) {
+      selectedServiceFilter = svc;
+      const pills = {
+        '': 'pill-all',
+        'Chatbots': 'pill-Chatbots',
+        'Web Development': 'pill-Web',
+        'App Development': 'pill-App',
+        'Automation': 'pill-Auto'
+      };
+
+      Object.entries(pills).forEach(([key, id]) => {
+        const el = document.getElementById(id);
+        if (key === svc) {
+          el.className = "px-3.5 py-1.5 rounded-xl text-xs font-medium bg-[#d4af37] text-black transition";
+        } else {
+          el.className = "px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#8e8e9f] hover:text-white bg-[#0e0e13] border border-[#1a1a24] hover:border-[#d4af37]/40 transition";
+        }
+      });
+
+      loadLeads();
+    }
+
+    async function loadLeads() {
+      const search = document.getElementById('filter-search').value;
+      const params = new URLSearchParams({
+        search: search,
+        service_match: selectedServiceFilter
+      });
+
+      try {
+        const res = await fetch(`/api/leads?${params.toString()}`);
+        const data = await res.json();
+        currentLeads = data.leads || [];
+        renderAllViews(currentLeads);
+      } catch (e) {
+        console.error("Leads load error", e);
+      }
+    }
+
+    function debounceLoadLeads() {
+      clearTimeout(searchDebounceTimeout);
+      searchDebounceTimeout = setTimeout(loadLeads, 300);
+    }
+
+    function renderAllViews(leads) {
+      const emptyState = document.getElementById('empty-state');
+      const cardsContainer = document.getElementById('cards-container');
+      const tableBody = document.getElementById('table-body');
+
+      if (!leads || leads.length === 0) {
+        emptyState.classList.remove('hidden');
+        cardsContainer.innerHTML = '';
+        tableBody.innerHTML = '';
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      renderCards(leads);
+      renderTable(leads);
+    }
+
+    // Render Cards View
+    function renderCards(leads) {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = leads.map(lead => {
+        const emails = lead.emails ? lead.emails.split(',').map(e => e.trim()).filter(Boolean) : [];
+        const phones = lead.phones ? lead.phones.split(',').map(p => p.trim()).filter(Boolean) : [];
+        const websiteUrl = lead.website && lead.website.startsWith('http') ? lead.website : `https://${lead.domain}`;
+        const contactName = lead.contact_name ? lead.contact_name : 'Founding & Leadership Team';
+
+        // Contact buttons
+        let contactButtons = [];
+        if (emails.length > 0) {
+          contactButtons.push(`
+            <a href="mailto:${emails[0]}" class="px-2.5 py-1 rounded-lg bg-[#0e1610] hover:bg-[#16221a] text-[#86efac] border border-[#1b3b24] text-[11px] font-mono flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-envelope text-[10px]"></i> ${emails[0]}
+            </a>
+          `);
+        }
+        if (phones.length > 0) {
+          const rawNum = phones[0];
+          const digits = rawNum.replace(/\D/g, '');
+          contactButtons.push(`
+            <a href="tel:${rawNum}" class="px-2.5 py-1 rounded-lg bg-[#18150c] hover:bg-[#252013] text-[#ebd68e] border border-[#423719] text-[11px] font-mono flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-phone text-[10px]"></i> ${rawNum}
+            </a>
+          `);
+          if (digits.length >= 10) {
+            contactButtons.push(`
+              <a href="https://wa.me/${digits}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-[#0e1610] hover:bg-[#16221a] text-[#86efac] border border-[#1b3b24] text-[11px] font-mono flex items-center gap-1.5 transition">
+                <i class="fa-brands fa-whatsapp text-xs"></i> WhatsApp
+              </a>
+            `);
+          }
+        }
+
+        return `
+          <div class="aurum-card p-5 rounded-2xl flex flex-col justify-between space-y-4">
+            
+            <!-- Card Header -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider badge-gold">
+                  ${lead.service_match || 'Digital Opportunity'}
+                </span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-[#13131c] text-[#9e9eb0] border border-[#1c1c28]">
+                  ${lead.country || 'Global'}
+                </span>
+              </div>
+
+              <div>
+                <a href="${websiteUrl}" target="_blank" rel="noopener noreferrer" class="text-base font-semibold text-white hover:text-[#d4af37] transition inline-flex items-center gap-1.5 group">
+                  <span>${lead.company_name || lead.domain}</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-[#5e5e70] group-hover:text-[#d4af37] transition"></i>
+                </a>
+                <p class="text-[11px] text-[#ebd68e] font-medium mt-0.5">${contactName}</p>
+                <p class="text-xs text-[#94a3b8] mt-1.5 line-clamp-2 leading-relaxed">
+                  ${lead.business_summary || 'Commercial enterprise.'}
+                </p>
+              </div>
+            </div>
+
+            <!-- Diagnostic Dossier -->
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 rounded-xl bg-[#0a0b0e] border border-[#161a14] leading-relaxed">
+                <span class="font-mono text-[9px] uppercase tracking-wider text-[#d4af37] block mb-0.5">✓ Advantage:</span>
+                <span class="text-[#cbd5e1] text-[11px]">${lead.where_they_are_good || 'Solid online presence'}</span>
+              </div>
+
+              <div class="p-2.5 rounded-xl bg-[#0d090a] border border-[#261416] leading-relaxed">
+                <span class="font-mono text-[9px] uppercase tracking-wider text-[#fca5a5] block mb-0.5">✕ Opportunity:</span>
+                <span class="text-[#e2e8f0] text-[11px]">${lead.where_they_are_lacking || lead.opportunity_type || 'Digital bottleneck'}</span>
+              </div>
+            </div>
+
+            <!-- Contact Strip & Action -->
+            <div class="space-y-3 pt-2 border-t border-[#161622]">
+              <div class="flex flex-wrap gap-1.5">
+                ${contactButtons.join('') || '<span class="text-[11px] text-[#6e6e7f] italic font-mono">No direct inboxes captured</span>'}
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button onclick="openPitchModal(${lead.id})" class="flex-1 py-2 px-3 rounded-xl btn-gold text-xs flex items-center justify-center gap-1.5">
+                  <span>Review Proposition</span>
+                  <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </button>
+                <button onclick="deleteLead(${lead.id})" class="p-2 rounded-xl border border-[#1c1c28] text-[#6e6e7f] hover:text-[#f87171] hover:border-[#f87171]/40 transition" title="Dismiss">
+                  <i class="fa-regular fa-trash-can text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Table View
+    function renderTable(leads) {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = leads.map(lead => {
+        const emails = lead.emails ? lead.emails.split(',').map(e => e.trim()).filter(Boolean) : [];
+        const phones = lead.phones ? lead.phones.split(',').map(p => p.trim()).filter(Boolean) : [];
+        const websiteUrl = lead.website && lead.website.startsWith('http') ? lead.website : `https://${lead.domain}`;
+
+        return `
+          <tr class="hover:bg-[#101017] transition group">
+            <td class="py-3 px-4">
+              <a href="${websiteUrl}" target="_blank" rel="noopener noreferrer" class="font-medium text-white hover:text-[#d4af37] transition inline-flex items-center gap-1">
+                ${lead.company_name || lead.domain}
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-[#5e5e70]"></i>
+              </a>
+              <div class="text-[10px] text-[#7e7e8f] font-mono">${lead.domain}</div>
+            </td>
+            <td class="py-3 px-4 font-mono text-[11px] text-[#ebd68e]">
+              ${lead.service_match || 'General Dev'}
+            </td>
+            <td class="py-3 px-4 max-w-xs text-[#cbd5e1] text-xs">
+              ${lead.where_they_are_good || '-'}
+            </td>
+            <td class="py-3 px-4 max-w-xs text-[#fca5a5] text-xs">
+              ${lead.where_they_are_lacking || '-'}
+            </td>
+            <td class="py-3 px-4 font-mono text-[11px]">
+              ${emails.length > 0 ? `<div class="text-[#86efac]">${emails[0]}</div>` : ''}
+              ${phones.length > 0 ? `<div class="text-[#ebd68e]">${phones[0]}</div>` : ''}
+            </td>
+            <td class="py-3 px-4 text-right">
+              <button onclick="openPitchModal(${lead.id})" class="px-2.5 py-1 rounded-lg btn-gold text-xs font-medium">
+                Proposition
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Open Modal
+    function openPitchModal(id) {
+      const lead = currentLeads.find(l => l.id === id);
+      if (!lead) return;
+      activeModalLead = lead;
+
+      const websiteUrl = lead.website && lead.website.startsWith('http') ? lead.website : `https://${lead.domain}`;
+
+      document.getElementById('modal-company-name').innerText = lead.company_name || lead.domain;
+      document.getElementById('modal-domain').innerText = lead.domain;
+      document.getElementById('modal-website-link').href = websiteUrl;
+      document.getElementById('modal-service-badge').innerText = lead.service_match || 'Digital Opportunity';
+      document.getElementById('modal-country-badge').innerText = lead.country || 'Global';
+
+      document.getElementById('modal-contact-name').innerText = lead.contact_name ? `${lead.contact_name}` : `Founding & Leadership Team`;
+      document.getElementById('modal-business-summary').innerText = lead.business_summary || 'Commercial enterprise.';
+      document.getElementById('modal-where-good').innerText = lead.where_they_are_good || 'Clear market presence.';
+      document.getElementById('modal-where-lacking').innerText = lead.where_they_are_lacking || lead.opportunity_type || 'Bottleneck identified.';
+
+      document.getElementById('modal-pitch-textarea').value = lead.confident_pitch || lead.pitch_hook || '';
+
+      // Inboxes
+      const emailsContainer = document.getElementById('modal-emails');
+      const emails = lead.emails ? lead.emails.split(',').map(e => e.trim()).filter(Boolean) : [];
+      if (emails.length > 0) {
+        emailsContainer.innerHTML = emails.map(e => `
+          <div class="flex items-center justify-between p-2 rounded-lg bg-[#0c0c11] border border-[#1a1a24]">
+            <span class="text-[#86efac] text-xs">${e}</span>
+            <a href="mailto:${e}" class="text-[11px] text-[#ebd68e] hover:underline">Compose ↗</a>
+          </div>
+        `).join('');
+      } else {
+        emailsContainer.innerHTML = `<span class="text-[#6e6e7f] italic text-xs">No direct emails found</span>`;
+      }
+
+      // Phones
+      const phonesContainer = document.getElementById('modal-phones');
+      const phones = lead.phones ? lead.phones.split(',').map(p => p.trim()).filter(Boolean) : [];
+      if (phones.length > 0) {
+        phonesContainer.innerHTML = phones.map(p => {
+          const digits = p.replace(/\D/g, '');
+          return `
+            <div class="flex items-center justify-between p-2 rounded-lg bg-[#0c0c11] border border-[#1a1a24]">
+              <span class="text-[#ebd68e] text-xs">${p}</span>
+              <div class="flex items-center gap-2">
+                <a href="tel:${p}" class="text-[11px] text-[#ebd68e] hover:underline">Call</a>
+                ${digits.length >= 10 ? `<a href="https://wa.me/${digits}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-[#86efac] hover:underline">WhatsApp ↗</a>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        phonesContainer.innerHTML = `<span class="text-[#6e6e7f] italic text-xs">No direct phone found</span>`;
+      }
+
+      document.getElementById('pitch-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('pitch-modal').classList.add('hidden');
+      activeModalLead = null;
+    }
+
+    function copyModalPitch() {
+      if (!activeModalLead) return;
+      const text = document.getElementById('modal-pitch-textarea').value;
+      navigator.clipboard.writeText(text);
+      const btn = document.getElementById('copy-modal-pitch-btn');
+      btn.innerHTML = `<i class="fa-solid fa-check text-xs"></i> Copied`;
+      setTimeout(() => {
+        btn.innerHTML = `<i class="fa-regular fa-copy text-xs"></i> Copy Proposition`;
+      }, 2000);
+    }
+
+    async function deleteLead(id) {
+      if (!confirm("Remove this prospect from your pipeline?")) return;
+      await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+      loadAllData();
+    }
+
+    // Trigger Autonomous Cycle
+    async function triggerAutonomousCycle() {
+      try {
+        const res = await fetch('/api/autopilot/run-now?batch_size=15', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+          startLivePolling();
+        } else {
+          alert(data.message || "Sweep already in progress.");
+        }
+      } catch (err) {
+        alert("Error initiating sweep: " + err);
+      }
+    }
+
+    // Self-Healing Protocol
+    async function triggerSelfHeal() {
+      const btn = document.getElementById('self-heal-btn');
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs text-[#d4af37]"></i> Diagnosing...`;
+      try {
+        const res = await fetch('/api/self-heal', { method: 'POST' });
+        const data = await res.json();
+        loadAllData();
+        btn.innerHTML = `<i class="fa-solid fa-check text-xs text-[#86efac]"></i> Healed (${data.repaired_records || 0})`;
+        setTimeout(() => {
+          btn.innerHTML = `<i class="fa-solid fa-shield-halved text-xs text-[#d4af37]"></i> Self-Healing Loop`;
+        }, 3000);
+      } catch (err) {
+        btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xs text-rose-400"></i> Error`;
+      }
+    }
+
+    // Live Polling
+    function startLivePolling() {
+      document.getElementById('live-progress-container').classList.remove('hidden');
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(checkJobStatus, 1000);
+      checkJobStatus();
+    }
+
+    async function checkJobStatus() {
+      try {
+        const res = await fetch('/api/job-status');
+        const state = await res.json();
+
+        document.getElementById('live-action-status').innerText = state.current_action || 'Processing...';
+        document.getElementById('live-progress-pct').innerText = `${state.progress_percent || 0}%`;
+        document.getElementById('progress-bar-fill').style.width = `${state.progress_percent || 0}%`;
+
+        const term = document.getElementById('terminal-logs');
+        if (state.logs && state.logs.length > 0) {
+          term.innerHTML = state.logs.map(l => `<div>${l}</div>`).join('');
+          term.scrollTop = term.scrollHeight;
+        }
+
+        loadStats();
+        loadLeads();
+
+        if (!state.is_running) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+          setTimeout(() => {
+            document.getElementById('live-progress-container').classList.add('hidden');
+          }, 3000);
+        }
+      } catch (e) {
+        console.error("Job status check error", e);
+      }
+    }
+
+    function loadAllData() {
+      loadStats();
+      loadLeads();
+    }
+
+    window.onload = () => {
+      loadAllData();
+      checkJobStatus();
+    };
+  </script>
+</body>
+</html>
