@@ -8,6 +8,7 @@ import json
 import os
 from datetime import datetime
 from config import DB_PATH, EXPORTS_DIR
+from extractors.contact_miner import clean_email, clean_phone
 
 def get_db():
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
@@ -147,14 +148,14 @@ def save_or_update_lead(lead_data: dict) -> bool:
             lead_data.get("status", "New")
         ))
     else:
-        # Merge new emails & phones with existing
-        existing_emails = set(e.strip() for e in (existing["emails"] or "").split(",") if e.strip())
-        new_emails = set(e.strip() for e in (lead_data.get("emails") or "").split(",") if e.strip())
-        all_emails = ", ".join(sorted(existing_emails.union(new_emails)))
+        # Merge new emails & phones with existing, sanitizing both
+        raw_combined_emails = (existing["emails"] or "").split(",") + (lead_data.get("emails") or "").split(",")
+        clean_combined_emails = [clean_email(e.strip(), domain) for e in raw_combined_emails if e.strip()]
+        all_emails = ", ".join(sorted(list(dict.fromkeys(filter(None, clean_combined_emails)))))
 
-        existing_phones = set(p.strip() for p in (existing["phones"] or "").split(",") if p.strip())
-        new_phones = set(p.strip() for p in (lead_data.get("phones") or "").split(",") if p.strip())
-        all_phones = ", ".join(sorted(existing_phones.union(new_phones)))
+        raw_combined_phones = (existing["phones"] or "").split(",") + (lead_data.get("phones") or "").split(",")
+        clean_combined_phones = [clean_phone(p.strip()) for p in raw_combined_phones if p.strip()]
+        all_phones = ", ".join(sorted(list(dict.fromkeys(filter(None, clean_combined_phones)))))
 
         cursor.execute("""
         UPDATE leads SET

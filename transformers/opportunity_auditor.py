@@ -20,6 +20,14 @@ APP_STORE_SIGNATURES = [
     "apps.apple.com", "play.google.com", "itunes.apple.com"
 ]
 
+STOP_WORDS_AND_TITLES = {
+    "the", "our", "best", "about", "team", "digital", "agency", "company", "media",
+    "solutions", "insightful", "imparting", "services", "technologies", "studios",
+    "and", "or", "in", "at", "for", "with", "is", "of", "to", "a", "an", "as",
+    "cmo", "ceo", "cto", "coo", "cfo", "cio", "cro", "vp", "head", "lead", "director",
+    "manager", "founder", "co-founder", "president", "partner", "member", "all"
+}
+
 def extract_decision_maker_name(soup: BeautifulSoup, text: str) -> str:
     """Extracts founder, CEO, or owner name from schema or page content."""
     # 1. Try JSON-LD Schema
@@ -28,24 +36,30 @@ def extract_decision_maker_name(soup: BeautifulSoup, text: str) -> str:
             data = json.loads(script.string or "{}")
             if isinstance(data, list):
                 data = data[0] if data else {}
-            
-            # Check founder or author
+
             for key in ["founder", "author", "creator"]:
                 if key in data:
                     val = data[key]
                     if isinstance(val, dict) and "name" in val:
-                        return val["name"]
+                        name_cand = val["name"]
                     elif isinstance(val, str):
-                        return val
+                        name_cand = val
+                    else:
+                        continue
+                    words = name_cand.lower().split()
+                    if 1 <= len(words) <= 3 and not any(w in STOP_WORDS_AND_TITLES for w in words):
+                        return name_cand.strip()
         except Exception:
             pass
 
-    # 2. Text heuristics for Founders & Leadership
-    founder_matches = re.findall(r'(?:founded by|founder & ceo|founder:?|ceo:?|co-founder:?)\s+([A-Z][a-z]{2,15}\s+[A-Z][a-z]{2,15})', text, re.IGNORECASE)
-    bad_words = {"the", "our", "best", "about", "team", "digital", "agency", "company", "media", "solutions", "insightful", "imparting", "services", "technologies", "studios"}
+    # 2. Text heuristics for Founders & Leadership (Case-sensitive names)
+    founder_matches = re.findall(
+        r'(?i:founded by|co-founder & ceo|founder & ceo|founder:?|ceo:?|co-founder:?)\s+([A-Z][a-z]{1,15}\s+[A-Z][a-z]{1,15})',
+        text
+    )
     for candidate in founder_matches:
         words = candidate.lower().split()
-        if len(words) == 2 and not any(w in bad_words for w in words):
+        if len(words) == 2 and not any(w in STOP_WORDS_AND_TITLES for w in words):
             if not any(w.endswith("ing") or w.endswith("tion") or w.endswith("ly") or w.endswith("ed") for w in words):
                 return candidate.strip()
 
@@ -86,7 +100,11 @@ def audit_business_for_services(html_content: str, soup: BeautifulSoup, company_
 
     # Extract Decision Maker Name
     contact_name = extract_decision_maker_name(soup, text)
-    display_greeting = f"Hi {contact_name.split()[0]}" if contact_name else f"Hi {company_name} team"
+    if contact_name and len(contact_name.split()[0]) >= 2 and contact_name.split()[0].lower() not in STOP_WORDS_AND_TITLES:
+        display_greeting = f"Hi {contact_name.split()[0]}"
+    else:
+        contact_name = ""
+        display_greeting = f"Hi {company_name} team"
 
     # Meta description
     meta_tag = soup.find("meta", attrs={"name": "description"}) or soup.find("meta", attrs={"property": "og:description"})

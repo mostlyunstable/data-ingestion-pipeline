@@ -16,6 +16,7 @@ from extractors.contact_miner import (
 )
 from extractors.tech_detector import detect_tech_stack
 from transformers.opportunity_auditor import audit_business_for_services
+from transformers.cleaner import clean_company_brand_name
 
 def normalize_url(raw_url: str) -> str:
     """Ensures URL starts with http(s):// and is clean."""
@@ -34,36 +35,6 @@ def extract_domain(url: str) -> str:
         return domain
     except Exception:
         return url.lower()
-
-def extract_company_name(title: str, domain: str) -> str:
-    """Infers clean company name from HTML title or domain."""
-    if not title:
-        # Fallback to domain name capitalized
-        name = domain.split(".")[0]
-        return name.replace("-", " ").replace("_", " ").title()
-
-    # Split common title delimiters: |, -, :, •, ~
-    delimiters = ["|", " - ", " – ", " — ", " : ", " • ", " ~ "]
-    parts = [title]
-    for d in delimiters:
-        if d in title:
-            parts = [p.strip() for p in title.split(d) if p.strip()]
-            break
-
-    # Pick the part that matches the domain root or looks most like a brand
-    clean_domain_root = domain.split(".")[0].replace("-", "").replace("_", "").lower()
-    candidate = parts[-1] if len(parts) > 1 else parts[0]
-
-    for p in parts:
-        p_clean = re.sub(r'[^a-zA-Z0-9]', '', p).lower()
-        if clean_domain_root in p_clean or (len(clean_domain_root) > 4 and clean_domain_root[:4] in p_clean):
-            candidate = p
-            break
-        elif not any(p.lower().startswith(bad) for bad in ["best ", "top ", "welcome ", "#1 "]) and len(p) < len(candidate):
-            candidate = p
-
-    candidate = re.sub(r'^(Welcome to|Home|Home Page|Official Site)\s*[:-]?\s*', '', candidate, flags=re.IGNORECASE)
-    return candidate.strip() or domain
 
 async def fetch_html(session: aiohttp.ClientSession, url: str) -> str:
     """Fetches HTML with stealth headers and SSL ignore."""
@@ -131,7 +102,7 @@ async def crawl_single_company(target_url_or_domain: str, niche: str = "", sourc
 
         # Extract Title & Meta Description
         title = home_soup.title.string.strip() if home_soup.title and home_soup.title.string else ""
-        result["company_name"] = extract_company_name(title, domain)
+        result["company_name"] = clean_company_brand_name(title, domain)
 
         meta_desc = home_soup.find("meta", attrs={"name": "description"}) or home_soup.find("meta", attrs={"property": "og:description"})
         if meta_desc and meta_desc.get("content"):

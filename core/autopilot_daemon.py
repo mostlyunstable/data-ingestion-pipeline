@@ -30,6 +30,10 @@ class AutopilotDaemon:
 
     async def execute_single_cycle(self, batch_size: int = 15):
         """Executes one autonomous cycle of discovery, audit, and ingestion."""
+        if job_state.is_running:
+            job_state.log("⚡ [Autopilot] A cycle is already executing. Skipping redundant trigger.")
+            return
+
         job_state.log("⚡ [Autopilot] Commencing autonomous prospect discovery...")
         targets = autopilot_manager.get_next_target_batch(batch_size=batch_size)
 

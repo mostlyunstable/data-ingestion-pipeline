@@ -1,158 +1,66 @@
-"""
-Self-Healing Diagnostic & Data Integrity Engine
-Continuously audits the database, repairs corrupted records,
-filters out parked/dead domains, normalizes company names, and removes junk.
-"""
 import re
-import urllib.parse
 import sqlite3
-from config import DB_PATH, IGNORED_EMAIL_DOMAINS, IGNORED_EMAIL_PREFIXES
+from config import DB_PATH
+from transformers.cleaner import clean_company_brand_name
+from extractors.contact_miner import clean_email, clean_phone
 
-PARKED_DOMAIN_SIGNATURES = [
-    "buy this domain", "domain for sale", "parked free by godaddy",
-    "is available for sale", "this domain is registered", "website under construction",
-    "cgi-sys/defaultwebpage", "domain is parked", "hugedomains", "dan.com"
-]
-
-def clean_company_brand_name(name: str, domain: str) -> str:
-    """Strips SEO headlines and extracts the actual brand name."""
-    if not name or len(name.strip()) == 0:
-        clean_d = domain.split('.')[0]
-        return clean_d.replace('-', ' ').replace('_', ' ').title()
-
-    cleaned = name.strip()
-
-    # Split delimiters
-    for delim in [':', '·', '|', ' - ', ' – ', ' — ', ' ~ ']:
-        if delim in cleaned:
-            parts = [p.strip() for p in cleaned.split(delim) if p.strip()]
-            # Find the part that matches the domain or looks most like a short brand name
-            root_domain = domain.split('.')[0].lower()
-            matched = False
-            for p in parts:
-                p_lower = re.sub(r'[^a-zA-Z0-9]', '', p).lower()
-                if root_domain in p_lower:
-                    cleaned = p
-                    matched = True
-                    break
-            if not matched:
-                # Prefer shortest non-marketing phrase
-                candidates = [p for p in parts if not any(p.lower().startswith(b) for b in ["best ", "top ", "welcome ", "#1 ", "find "])]
-                if candidates:
-                    cleaned = min(candidates, key=len)
-                else:
-                    cleaned = parts[0]
-            break
-
-    # Strip prefixes like "Welcome to", "Home"
-    cleaned = re.sub(r'^(?:Welcome to|Home|Official Site)\s*[:-]?\s*', '', cleaned, flags=re.IGNORECASE)
-
-    # If the resulting name is generic SEO phrase, fallback to domain root
-    if any(phrase in cleaned.lower() for phrase in ["digital marketing agency", "web development company", "software solutions", "indie game studio"]):
-        root_d = domain.split('.')[0]
-        return root_d.replace('-', ' ').replace('_', ' ').title()
-
-    return cleaned.strip()
+from transformers.opportunity_auditor import STOP_WORDS_AND_TITLES
 
 def sanitize_email_list(emails_str: str, domain: str) -> list:
-    """Removes corrupt, unicode-escaped, template, or invalid emails."""
+    """Uses canonical email cleaner to filter list."""
     if not emails_str:
         return []
-
-    valid_emails = []
-    candidates = [e.strip().lower() for e in emails_str.split(',') if e.strip()]
-
-    for email in candidates:
-        # Strip unicode escape artifacts
-        email = re.sub(r'^(?:u003e|u003c|\\u003e|\\u003c|>|<|/|\\)+', '', email)
-        email = re.sub(r'^[^\w]+|[^\w]+$', '', email)
-
-        # Basic email regex
-        if not re.match(r'^[a-z0-9][a-z0-9_.+-]*@[a-z0-9-]+\.[a-z0-9-.]+$', email):
-            continue
-
-        if len(email) < 6 or len(email) > 90:
-            continue
-
-        # Skip asset files
-        if any(email.endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.css', '.js', '.woff']):
-            continue
-
-        user, e_domain = email.split('@', 1)
-
-        # Skip dummy templates
-        if user in ["you", "yourname", "user", "username", "name", "email", "test", "demo", "sample", "sam", "fake", "u003e", "u003c"]:
-            continue
-
-        # Skip dummy domains
-        if e_domain in IGNORED_EMAIL_DOMAINS or e_domain in ["company.com", "acme.co", "domain.com", "example.com", "studio.dev"]:
-            continue
-
-        if user in IGNORED_EMAIL_PREFIXES:
-            continue
-
-        # TLD must be alphabetic
-        if '.' not in e_domain:
-            continue
-        tld = e_domain.split('.')[-1]
-        if not re.match(r'^[a-z]{2,12}$', tld):
-            continue
-
-        valid_emails.append(email)
-
-    return sorted(list(dict.fromkeys(valid_emails)))
+    clean_emails = []
+    for e in emails_str.split(','):
+        c = clean_email(e.strip(), domain)
+        if c:
+            clean_emails.append(c)
+    return sorted(list(dict.fromkeys(clean_emails)))
 
 def sanitize_phone_list(phones_str: str) -> list:
-    """Removes invalid numbers, duplicates, and non-phones."""
+    """Uses canonical phone cleaner to filter list."""
     if not phones_str:
         return []
-
-    valid_phones = []
-    unique_digits = set()
-    candidates = [p.strip() for p in phones_str.split(',') if p.strip()]
-
-    for p in candidates:
-        digits = re.sub(r'\D', '', p)
-        # Phone numbers must have between 8 and 15 digits
-        if 8 <= len(digits) <= 15:
-            # Skip year-like or timestamp sequences (e.g., 20240101)
-            if p.startswith(('202', '201', '199', '198')):
-                continue
-            if digits not in unique_digits:
-                unique_digits.add(digits)
-                valid_phones.append(p)
-
-    return valid_phones[:2]
+    clean_phones = []
+    for p in phones_str.split(','):
+        c = clean_phone(p.strip())
+        if c:
+            clean_phones.append(c)
+    return sorted(list(dict.fromkeys(clean_phones)))[:2]
 
 def run_self_healing_cycle() -> dict:
     """
     Scans entire database and executes self-healing:
-    1. Removes empty records (no email and no phone and no LinkedIn)
+    1. Removes empty records lacking verified email or phone
     2. Cleans company brand names
     3. Cleans emails and removes template junk
-    4. Cleans phones
-    5. Deduplicates
+    4. Cleans phones and strips truncated numbers
+    5. Purifies contact decision-maker names and greetings
+    6. Repairs outreach pitches to match cleaned brand names
     """
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.execute("PRAGMA journal_mode=WAL;")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT id, domain, company_name, website, emails, phones, linkedin_company, linkedin_profiles FROM leads")
+    cursor.execute("""
+    SELECT id, domain, company_name, website, emails, phones,
+           confident_pitch, pitch_hook, contact_name
+    FROM leads
+    """)
     rows = cursor.fetchall()
 
     repaired_count = 0
     deleted_count = 0
 
     for row in rows:
-        lead_id, domain, company_name, website, emails_raw, phones_raw, l_company, l_profiles = row
+        lead_id, domain, company_name, website, emails_raw, phones_raw, pitch, hook, contact_raw = row
 
-        # 1. Clean Emails
+        # 1. Clean Emails & Phones
         clean_emails = sanitize_email_list(emails_raw or "", domain or "")
         clean_phones = sanitize_phone_list(phones_raw or "")
 
         # 2. Check if lead has direct contact points (must have email or phone)
-        has_contacts = len(clean_emails) > 0 or len(clean_phones) > 0
-        if not has_contacts:
+        if not (clean_emails or clean_phones):
             cursor.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
             deleted_count += 1
             continue
@@ -160,10 +68,30 @@ def run_self_healing_cycle() -> dict:
         # 3. Clean Company Name
         clean_name = clean_company_brand_name(company_name or "", domain or "")
 
-        # 4. Clean Website
+        # 4. Clean Contact Decision Maker Name
+        clean_contact = (contact_raw or "").strip()
+        if clean_contact:
+            words = clean_contact.lower().split()
+            if any(w in STOP_WORDS_AND_TITLES for w in words) or len(words) > 3 or len(words) == 0:
+                clean_contact = ""
+
+        # 5. Clean Website
         clean_website = website.strip() if website else f"https://{domain}"
         if not clean_website.startswith("http://") and not clean_website.startswith("https://"):
             clean_website = f"https://{clean_website}"
+
+        # 6. Repair Pitch & Hook greetings
+        clean_pitch = pitch or ""
+        clean_hook = hook or ""
+        if clean_name:
+            if clean_pitch:
+                clean_pitch = re.sub(r'^(Hi\s+).*?(\s+team!)', rf'\g<1>{clean_name}\g<2>', clean_pitch)
+                clean_pitch = re.sub(r'(Love what you\'re doing with\s+).*?(—especially)', rf'\g<1>{clean_name}\g<2>', clean_pitch)
+                clean_pitch = re.sub(r'^Hi\s+(?:and|the|our|best|a|an)!\s*', f'Hi {clean_name} team! ', clean_pitch)
+            if clean_hook:
+                clean_hook = re.sub(r'^(Hi\s+).*?(\s+team!)', rf'\g<1>{clean_name}\g<2>', clean_hook)
+                clean_hook = re.sub(r'(Love what you\'re doing with\s+).*?(—especially)', rf'\g<1>{clean_name}\g<2>', clean_hook)
+                clean_hook = re.sub(r'^Hi\s+(?:and|the|our|best|a|an)!\s*', f'Hi {clean_name} team! ', clean_hook)
 
         # Update record
         cursor.execute("""
@@ -171,13 +99,19 @@ def run_self_healing_cycle() -> dict:
             company_name = ?,
             website = ?,
             emails = ?,
-            phones = ?
+            phones = ?,
+            contact_name = ?,
+            confident_pitch = ?,
+            pitch_hook = ?
         WHERE id = ?
         """, (
             clean_name,
             clean_website,
             ", ".join(clean_emails),
             ", ".join(clean_phones),
+            clean_contact,
+            clean_pitch,
+            clean_hook,
             lead_id
         ))
         repaired_count += 1

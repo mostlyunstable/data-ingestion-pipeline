@@ -16,7 +16,9 @@ SKIP_DOMAINS = {
     "wikipedia.org", "youtube.com", "facebook.com", "twitter.com", "x.com",
     "instagram.com", "reddit.com", "quora.com", "pinterest.com", "medium.com",
     "glassdoor.com", "indeed.com", "naukri.com", "linkedin.com", "github.com",
-    "yelp.com", "yellowpages.com"
+    "yelp.com", "yellowpages.com", "apple.com", "news.ycombinator.com", "ycombinator.com",
+    "producthunt.com", "substack.com", "notion.site", "figma.com", "tiktok.com",
+    "vimeo.com", "slack.com", "discord.com", "discord.gg"
 }
 
 def clean_target_domain(url: str) -> str:

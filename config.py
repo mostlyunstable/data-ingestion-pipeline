@@ -41,10 +41,11 @@ USER_AGENTS = [
 
 # Junk & template dummy email domains to ignore
 IGNORED_EMAIL_DOMAINS = {
-    "example.com", "domain.com", "yourdomain.com", "wixpress.com",
+    "example.com", "example.org", "example.net", "domain.com", "yourdomain.com", "wixpress.com",
     "sentry.io", "cloudflare.com", "gravatar.com", "github.com",
     "mycompany.com", "email.com", "site.com", "schema.org",
-    "company.com", "acme.co", "studio.dev", "website.com"
+    "company.com", "acme.com", "acme.co", "acme.org", "acme.io",
+    "studio.dev", "website.com", "dummy.com", "test.com", "sample.com"
 }
 
 IGNORED_EMAIL_PREFIXES = {

@@ -34,43 +34,69 @@ def decode_cloudflare_email(cf_hex: str) -> str:
     except Exception:
         return ""
 
-def clean_email(email: str) -> str:
-    """Validates and cleans an email string."""
+DUMMY_DOMAIN_ROOTS = {
+    "acme", "example", "sample", "test", "demo", "placeholder", "dummy",
+    "yourcompany", "mycompany", "yourdomain", "mydomain", "domain", "website",
+    "wixpress", "sentry", "cloudflare", "gravatar", "schema"
+}
+
+def clean_email(email: str, company_domain: str = "") -> str:
+    """Validates, unescapes, and cleans an email string."""
     if not email:
         return ""
     email = email.strip().lower()
 
-    # Strip unicode escape artifacts like u003e, u003c
-    email = re.sub(r'^(?:u003e|u003c|\\u003e|\\u003c|>|<|/|\\)+', '', email)
-    email = re.sub(r'^[^\w]+|[^\w]+$', '', email)
+    # Strip HTML / unicode / hex escape artifacts
+    email = email.strip('\\/<> \t\n\r"\'')
+    for p in ['x3c', 'x3e', 'u003c', 'u003e', '3c', '3e']:
+        if email.startswith(p):
+            email = email[len(p):]
+    email = email.strip('\\/<> \t\n\r"\'')
 
     # Basic structure check
     if not re.match(r'^[a-z0-9][a-z0-9_.+-]*@[a-z0-9-]+\.[a-z0-9-.]+$', email):
         return ""
 
-    # Check length
-    if len(email) < 6 or len(email) > 100:
+    if len(email) < 6 or len(email) > 90:
         return ""
 
     # Check invalid extensions (like images, scripts, or assets mistaken for email)
-    if any(email.endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.css', '.js', '.woff', '.ttf']):
+    if any(email.endswith(ext) for ext in ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.css', '.js', '.woff', '.ttf', '.json']):
         return ""
 
     user, domain = email.split('@', 1)
 
-    # User must not be dummy or library
-    if user in ["u003e", "u003c", "3e", "3c", "test", "demo", "sample", "you", "user", "username", "sam", "fake"]:
+    # Normalize fused html tags onto common users (e.g., lilipsupport -> support)
+    for tag in ['lilip', 'lip', 'li', 'p', 'span', 'div', 'br']:
+        for cp in ['support', 'hello', 'contact', 'info', 'sales', 'team', 'jobs', 'careers', 'help', 'press', 'legal', 'billing']:
+            if user == f"{tag}{cp}":
+                user = cp
+                email = f"{user}@{domain}"
+                break
+
+    # Strip newline prefix on info (e.g. ninfo -> info)
+    if user in ['ninfo', 'rinfo', 'tinfo']:
+        user = 'info'
+        email = f"info@{domain}"
+
+    # Filter out dummy / placeholder usernames
+    if user in ["you", "yourname", "user", "username", "name", "email", "test", "demo", "sample", "sam", "fake", "admin", "null", "undefined"]:
         return ""
 
     # TLD must be purely alphabetic (rejects package versions like @1.11.3)
     if '.' not in domain:
         return ""
     tld = domain.split('.')[-1]
-    if not re.match(r'^[a-zA-Z]{2,12}$', tld):
+    if not re.match(r'^[a-z]{2,12}$', tld):
         return ""
 
     # Filter out code/cdn/library usernames
     if any(lib in user for lib in ['bootstrap', 'jquery', 'slick', 'carousel', 'swiper', 'fontawesome', 'webpack', 'react']):
+        return ""
+
+    # Filter out dummy domain roots (acme.*, example.*, etc.)
+    root_domain = domain.split('.')[0].lower()
+    if root_domain in DUMMY_DOMAIN_ROOTS:
         return ""
 
     if domain in IGNORED_EMAIL_DOMAINS:
@@ -79,6 +105,38 @@ def clean_email(email: str) -> str:
         return ""
 
     return email
+
+def clean_phone(phone: str) -> str:
+    """Standardizes and strictly validates phone numbers (India & International)."""
+    if not phone:
+        return ""
+    phone = phone.strip()
+    digits = re.sub(r'\D', '', phone)
+
+    # Outreach phone numbers MUST be between 10 and 15 digits
+    if len(digits) < 10 or len(digits) > 15:
+        return ""
+
+    # Reject year timestamps or postal sequences
+    if digits.startswith(('2020', '2021', '2022', '2023', '2024', '2025', '2026', '199', '198')):
+        return ""
+
+    # Indian Number (+91 or starting with 91)
+    if phone.startswith('+91') or (digits.startswith('91') and len(digits) == 12):
+        in_digits = digits[2:] if digits.startswith('91') else digits
+        if len(in_digits) != 10:
+            return ""  # Invalid truncated number
+        return f"+91 {in_digits[:5]} {in_digits[5:]}"
+
+    # General international with leading +
+    if phone.startswith('+'):
+        return phone
+
+    # Standard 10-digit format (US/Intl)
+    if len(digits) == 10:
+        return f"+1 ({digits[:3]}) {digits[3:6]}-{digits[6:]}"
+
+    return f"+{digits}"
 
 def extract_emails(html_content: str, soup: BeautifulSoup) -> set:
     """Aggressively finds emails from plain text, mailto links, and Cloudflare tags."""
@@ -100,9 +158,12 @@ def extract_emails(html_content: str, soup: BeautifulSoup) -> set:
             if cleaned:
                 emails.add(cleaned)
 
-    # 3. Clean Regex across all HTML (decoding common unicode escapes first)
-    clean_html = html_content.replace('\\u003e', '').replace('\\u003c', '').replace('u003e', '').replace('u003c', '')
-    raw_matches = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', clean_html)
+    # 3. Regex across soup text (safely separated by spaces) and cleaned HTML with tags converted to spaces
+    clean_text = soup.get_text(separator=' ')
+    clean_html = re.sub(r'\\?u003[ce]|\\?x3[ce]|<[^>]*>|[<>]|\\n|\\r|\\t', ' ', html_content)
+    combined_source = f"{clean_text} {clean_html}"
+
+    raw_matches = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', combined_source)
     for match in raw_matches:
         cleaned = clean_email(match)
         if cleaned:
@@ -118,61 +179,49 @@ def extract_phones(text: str, soup: BeautifulSoup) -> set:
     for a in soup.find_all('a', href=True):
         href = a['href'].strip()
         if href.startswith('tel:'):
-            raw_phone = href.replace('tel:', '').strip()
+            raw_phone = href.replace('tel:', '').split('?')[0].strip()
             raw_phone = urllib.parse.unquote(raw_phone)
-            digits = re.sub(r'\D', '', raw_phone)
-            if 8 <= len(digits) <= 15:
-                phones.add(raw_phone)
+            cleaned = clean_phone(raw_phone)
+            if cleaned:
+                phones.add(cleaned)
 
         # WhatsApp links
         elif 'wa.me/' in href or 'whatsapp.com/send' in href:
             match = re.search(r'(?:wa\.me/|phone=)(\d{10,15})', href)
             if match:
-                w_phone = f"+{match.group(1)}"
-                phones.add(w_phone)
+                cleaned = clean_phone(f"+{match.group(1)}")
+                if cleaned:
+                    phones.add(cleaned)
 
     # 2. Strict Indian Phone Regex (MUST explicitly have +91 or 91- prefix)
     indian_matches = re.findall(r'(?:\+91[\-\s]?|91[\-\s])[6-9]\d{4}[\-\s]?\d{5}\b', text)
     for p in indian_matches:
-        clean = re.sub(r'\s+', ' ', p.strip())
-        digits = re.sub(r'\D', '', clean)
-        if len(digits) >= 10:
-            if not clean.startswith('+'):
-                clean = f"+{clean}"
-            phones.add(clean)
+        cleaned = clean_phone(p)
+        if cleaned:
+            phones.add(cleaned)
 
     # 3. Formatted US/UK/International Phone Patterns
-    # (xxx) xxx-xxxx
     us_matches = re.findall(r'(?:\+1[\s-]?)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}\b', text)
     for p in us_matches:
-        digits = re.sub(r'\D', '', p)
-        if len(digits) == 10 or (len(digits) == 11 and digits.startswith('1')):
-            # Avoid postal codes or fake year sequences
-            if not p.startswith(('202', '199', '198')):
-                phones.add(p.strip())
+        cleaned = clean_phone(p)
+        if cleaned:
+            phones.add(cleaned)
 
     # +44 (UK)
     uk_matches = re.findall(r'\+44[\s-]?[1-9]\d{1,4}[\s-]?\d{3,4}[\s-]?\d{3,4}\b', text)
     for p in uk_matches:
-        phones.add(p.strip())
+        cleaned = clean_phone(p)
+        if cleaned:
+            phones.add(cleaned)
 
     # Explicit labeled phones: e.g. "Call: +91 988...", "Phone: (555)..."
-    labeled = re.findall(r'(?:phone|call us|mobile|contact no|helpline)[\s:]+([+0-9\s().-]{8,20})', text, re.IGNORECASE)
+    labeled = re.findall(r'(?:phone|call us|mobile|contact no|helpline)[\s:]+([+0-9\s().-]{10,20})', text, re.IGNORECASE)
     for p in labeled:
-        clean = p.strip()
-        digits = re.sub(r'\D', '', clean)
-        if 8 <= len(digits) <= 15 and not clean.startswith(('202', '199')):
-            phones.add(clean)
+        cleaned = clean_phone(p)
+        if cleaned:
+            phones.add(cleaned)
 
-    # Deduplicate by pure numeric digits
-    unique_phones = {}
-    for p in phones:
-        digits = re.sub(r'\D', '', p)
-        if 7 <= len(digits) <= 15:
-            if digits not in unique_phones or len(p) > len(unique_phones[digits]):
-                unique_phones[digits] = p
-
-    return set(list(unique_phones.values())[:3])
+    return set(list(phones)[:3])
 
 def extract_socials_and_linkedin(soup: BeautifulSoup) -> dict:
     """Extracts social profiles and distinguishes LinkedIn company vs personal profile."""
