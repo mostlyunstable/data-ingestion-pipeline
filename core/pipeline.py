@@ -62,7 +62,11 @@ async def process_company_lead(url: str, niche: str, source: str) -> dict:
 
         # Blacklist massive directories and platforms
         dom = cleaned.get("domain", "").lower()
-        if any(b in dom for b in ["ycombinator", "github", "apple", "google", "microsoft", "producthunt", "reddit", "twitter", "linkedin", "wikipedia"]):
+        if any(b in dom for b in [
+            "ycombinator", "github", "apple", "google", "microsoft", "producthunt",
+            "reddit", "twitter", "linkedin", "wikipedia", "shopify", "wordpress",
+            "wix", "squarespace", "amazon", "stripe", "hubspot", "mailchimp"
+        ]):
             return None
 
         # Quality Gate: Must have at least one direct contact method (Email or Phone)

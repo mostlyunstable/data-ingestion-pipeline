@@ -27,6 +27,8 @@ def clean_company_brand_name(title: str, domain: str) -> str:
         cleaned = min(candidates, key=len) if candidates else parts[0]
 
     cleaned = re.sub(r'^(?:Welcome to|Home|Home Page|Official Site)\s*[:-]?\s*', '', cleaned, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(r'[\u2700-\u27bf\U0001f300-\U0001f9ff\u2600-\u26ff✦★☆•·~™®©]+', '', cleaned).strip()
+    cleaned = cleaned.rstrip(' .,-_/:;|✦★☆')
     return cleaned or domain
 
 def clean_lead_payload(raw_lead: dict) -> dict:

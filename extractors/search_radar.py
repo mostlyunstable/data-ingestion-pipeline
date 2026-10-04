@@ -18,7 +18,10 @@ SKIP_DOMAINS = {
     "glassdoor.com", "indeed.com", "naukri.com", "linkedin.com", "github.com",
     "yelp.com", "yellowpages.com", "apple.com", "news.ycombinator.com", "ycombinator.com",
     "producthunt.com", "substack.com", "notion.site", "figma.com", "tiktok.com",
-    "vimeo.com", "slack.com", "discord.com", "discord.gg"
+    "vimeo.com", "slack.com", "discord.com", "discord.gg",
+    "shopify.com", "wordpress.com", "wordpress.org", "wix.com", "squarespace.com",
+    "webflow.com", "hubspot.com", "salesforce.com", "mailchimp.com", "klaviyo.com",
+    "omnisend.com", "stripe.com", "paypal.com", "amazon.com", "ebay.com", "etsy.com"
 }
 
 def clean_target_domain(url: str) -> str:

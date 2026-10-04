@@ -143,8 +143,19 @@ def audit_business_for_services(html_content: str, soup: BeautifulSoup, company_
     opportunity_type = "Web Performance Revamp"
     lead_score = "HIGH"
 
-    # Priority A: Chatbot missing on customer-heavy or lead-heavy site
-    if not has_chatbot and (has_ecommerce or "agency" in niche.lower() or "saas" in niche.lower() or "services" in lower_html or has_multiple_forms):
+    # Priority A: Legacy Web / Outdated Tech Stack (Direct Web Development Revamp)
+    if is_legacy_web:
+        service_match = "Web Development"
+        opportunity_type = "Legacy Web Architecture & Speed Lag"
+        weaknesses.append("Site runs on legacy CMS/jQuery plugins with script bloat; slower mobile load speeds and higher bounce rates")
+        lead_score = "HOT"
+        pitch_body = (
+            f"noticed a few frontend performance bottlenecks on your mobile site that could be hurting Core Web Vitals and conversion rates. "
+            f"I modernize legacy websites into high-speed Next.js / React architectures with sub-second load times that convert more visitors into clients."
+        )
+
+    # Priority B: Chatbot missing on customer-heavy or lead-heavy site
+    elif not has_chatbot and (has_ecommerce or "agency" in niche.lower() or "saas" in niche.lower() or "customer" in lower_html or has_multiple_forms):
         service_match = "Chatbots"
         opportunity_type = "No 24/7 AI Chatbot (Visitor Lead Loss)"
         weaknesses.append("No automated 24/7 AI chatbot or live support; visitors leave without instant answers or lead capture")
@@ -155,8 +166,8 @@ def audit_business_for_services(html_content: str, soup: BeautifulSoup, company_
             f"I build automated conversational AI chatbots that answer customer FAQs, capture verified emails/phones, and book calls 24/7 without extra team overhead."
         )
 
-    # Priority B: Mobile App missing on recurring platform / e-commerce
-    elif not has_mobile_app and (has_ecommerce or "saas" in niche.lower() or "platform" in lower_html):
+    # Priority C: Mobile App missing on recurring platform / e-commerce
+    elif not has_mobile_app and (has_ecommerce or "platform" in lower_html or "retail" in niche.lower()):
         service_match = "App Development"
         opportunity_type = "No iOS/Android Mobile App (Low Retention)"
         weaknesses.append("No native iOS App Store or Google Play apps; missing out on mobile push notifications & repeat customer loyalty")
@@ -167,30 +178,22 @@ def audit_business_for_services(html_content: str, soup: BeautifulSoup, company_
             f"I develop cross-platform Flutter & React Native apps that sync directly with your web database."
         )
 
-    # Priority C: Automation & Custom Pipeline Bottlenecks
-    elif has_multiple_forms or has_ecommerce or "agency" in niche.lower():
-        service_match = "Automation & Pipelines"
+    # Priority D: Automation & Business Bottlenecks
+    elif has_multiple_forms or "agency" in niche.lower() or "automation" in niche.lower() or "logistics" in niche.lower():
+        service_match = "Automation"
         opportunity_type = "Manual Lead & Data Workflows"
         weaknesses.append("Static lead capture forms with no automated instant WhatsApp/SMS response or CRM pipeline sync")
+        lead_score = "HIGH"
         pitch_body = (
             f"noticed your lead forms currently require manual follow-up. "
             f"I build automated data ingestion pipelines and business automations that instantly route leads into your CRM, send immediate WhatsApp/SMS confirmations, and sync catalogs automatically—saving 15+ hours of manual admin work weekly."
         )
 
-    # Priority D: Web Development Upgrade
-    elif is_legacy_web:
-        service_match = "Web Development"
-        opportunity_type = "Legacy Web Architecture & Speed Lag"
-        weaknesses.append("Site runs on legacy CMS/jQuery plugins with script bloat; slower mobile load speeds and higher bounce rates")
-        pitch_body = (
-            f"noticed a few frontend performance bottlenecks on your mobile site that could be hurting Core Web Vitals and search rankings. "
-            f"I modernize legacy websites into high-speed Next.js / React architectures with sub-second load times that convert more visitors into clients."
-        )
-
     else:
-        service_match = "Custom Pipelines & Web Dev"
+        service_match = "Custom Pipelines"
         opportunity_type = "Full-Stack Integrations & Scale"
         weaknesses.append("Architecture lacks custom API integrations, real-time data sync, and high-performance microservices")
+        lead_score = "HIGH"
         pitch_body = (
             f"as a full-stack engineer specializing in custom data pipelines and modern web engineering, "
             f"I help teams build bespoke backend integrations, automated scrapers, and frontend feature modules on-demand without hiring full-time overhead."

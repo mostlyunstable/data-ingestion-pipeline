@@ -144,13 +144,15 @@ async def crawl_single_company(target_url_or_domain: str, niche: str = "", sourc
 
         combined_text = home_soup.get_text()
 
-        for s_html in subpage_results:
+        for s_url, s_html in zip(target_subpages, subpage_results):
             if isinstance(s_html, str) and s_html:
                 s_soup = BeautifulSoup(s_html, "html.parser")
                 combined_text += " " + s_soup.get_text()
 
                 result["emails"].update(extract_emails(s_html, s_soup))
-                result["phones"].update(extract_phones(s_soup.get_text(), s_soup))
+                is_legal = any(k in s_url.lower() for k in ["privacy", "terms", "legal", "policy", "compliance"])
+                if not is_legal:
+                    result["phones"].update(extract_phones(s_soup.get_text(), s_soup))
 
                 s_socials = extract_socials_and_linkedin(s_soup)
                 for k, v in s_socials.items():

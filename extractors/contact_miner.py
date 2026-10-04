@@ -106,6 +106,11 @@ def clean_email(email: str, company_domain: str = "") -> str:
 
     return email
 
+STATUTORY_FAKE_PHONES = {
+    "8009525210", "9164451254",  # California Department of Consumer Affairs (Civil Code 1789.3)
+    "8002221222", "8007997233", "8002738255", "8004321000", "8005551212"
+}
+
 def clean_phone(phone: str) -> str:
     """Standardizes and strictly validates phone numbers (India & International)."""
     if not phone:
@@ -119,6 +124,11 @@ def clean_phone(phone: str) -> str:
 
     # Reject year timestamps or postal sequences
     if digits.startswith(('2020', '2021', '2022', '2023', '2024', '2025', '2026', '199', '198')):
+        return ""
+
+    # Reject statutory disclosure numbers (e.g., CA Dept of Consumer Affairs hotline in terms/privacy)
+    norm_10 = digits[1:] if (len(digits) == 11 and digits.startswith('1')) else digits
+    if norm_10 in STATUTORY_FAKE_PHONES or digits in STATUTORY_FAKE_PHONES or "55501" in digits:
         return ""
 
     # Indian Number (+91 or starting with 91)
