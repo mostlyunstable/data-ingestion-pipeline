@@ -8,28 +8,84 @@ def clean_text(text: str) -> str:
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
+GENERIC_BRAND_STOP_WORDS = {
+    'near me', 'near you', 'home', 'homepage', 'welcome', 'official site', 'login',
+    'contact us', 'about us', 'services', 'find a dentist', 'find a doctor',
+    'compare 250+ practices', 'compare practices', 'reviews', 'ratings', 'open today',
+    'best dentist near me', 'best clinic near me', 'affordable dentist', 'find a lawyer'
+}
+
+COMMON_LOCATIONS = {
+    'koramangala', 'indiranagar', 'bandra', 'juhu', 'whitefield', 'gurgaon', 'noida',
+    'bangalore', 'mumbai', 'delhi', 'hyderabad', 'chennai', 'pune', 'london', 'dubai',
+    'new york', 'austin', 'central london', 'manchester', 'birmingham', 'chicago'
+}
+
+def format_domain_brand(domain: str) -> str:
+    raw = domain.split('.')[0].lower()
+    if raw.startswith('dr') and len(raw) >= 5:
+        keywords = ['cosmetic', 'dermatology', 'dental', 'clinic', 'skin', 'care', 'health', 'aesthetics', 'surgery']
+        rest = raw[2:]
+        for kw in keywords:
+            if kw in rest:
+                rest = rest.replace(kw, f' {kw} ')
+        parts = [p.capitalize() for p in rest.split() if p]
+        return f"Dr. {' '.join(parts)}"
+    return domain.split('.')[0].replace('-', ' ').replace('_', ' ').title()
+
 def clean_company_brand_name(title: str, domain: str) -> str:
     """Strips SEO headlines and extracts the authentic brand name."""
-    if not title:
-        return domain.split('.')[0].replace('-', ' ').replace('_', ' ').title()
+    fallback_name = format_domain_brand(domain)
+    if not title or title.lower().strip() in COMMON_LOCATIONS:
+        return fallback_name
 
     cleaned = title.strip()
-    parts = [p.strip() for p in re.split(r'[:|·•~]|\s[-–—]\s', cleaned) if p.strip()]
-    root_domain = domain.split('.')[0].replace('-', '').replace('_', '').lower()
-    clean_parts = [(p, re.sub(r'[^a-zA-Z0-9]', '', p).lower()) for p in parts]
-
-    for p, p_sub in clean_parts:
-        if (len(p_sub) >= 3 and p_sub in root_domain) or (len(root_domain) >= 4 and root_domain in p_sub):
-            cleaned = p
-            break
-    else:
-        candidates = [p for p in parts if not any(p.lower().startswith(b) for b in ["best ", "top ", "welcome ", "#1 ", "find "])]
-        cleaned = min(candidates, key=len) if candidates else parts[0]
-
-    cleaned = re.sub(r'^(?:Welcome to|Home|Home Page|Official Site)\s*[:-]?\s*', '', cleaned, flags=re.IGNORECASE).strip()
+    # Strip phone numbers from titles
+    cleaned = re.sub(r'(\+?\d[\d\s\-\(\)]{7,}\d)', '', cleaned)
+    # Strip emojis and symbol clutter
     cleaned = re.sub(r'[\u2700-\u27bf\U0001f300-\U0001f9ff\u2600-\u26ff✦★☆•·~™®©]+', '', cleaned).strip()
-    cleaned = cleaned.rstrip(' .,-_/:;|✦★☆')
-    return cleaned or domain
+
+    # Split on common separators: pipe, dash, bullet, colon, comma, slash
+    parts = [p.strip() for p in re.split(r'[:|·•~,]|\s[-–—]\s', cleaned) if p.strip()]
+
+    valid_parts = []
+    for p in parts:
+        p_clean = re.sub(r'^(?:Welcome to|Home|Home Page|Official Site)\s*[:-]?\s*', '', p, flags=re.IGNORECASE).strip()
+        p_lower = p_clean.lower()
+        if any(stop == p_lower or stop in p_lower for stop in GENERIC_BRAND_STOP_WORDS) or p_lower in COMMON_LOCATIONS:
+            continue
+        if len(re.sub(r'[^a-zA-Z]', '', p_clean)) < 3:
+            continue
+        valid_parts.append(p_clean)
+
+    if not valid_parts:
+        return fallback_name
+
+    root_domain = domain.split('.')[0].replace('-', '').replace('_', '').lower()
+    clean_parts = [(p, re.sub(r'[^a-zA-Z0-9]', '', p).lower()) for p in valid_parts]
+
+    def finalize_name(s: str) -> str:
+        s = re.sub(r'\s*\([^)]*$', '', s)
+        s = re.sub(r'[\u2700-\u27bf\U0001f300-\U0001f9ff\u2600-\u26ff✦★☆•·~™®©]+', '', s).strip()
+        return s.rstrip(' .,-_/:;|✦★☆([{')
+
+    # 1. Match against domain name
+    for p, p_sub in clean_parts:
+        if p_sub == root_domain or (len(p_sub) >= 4 and p_sub in root_domain) or (len(root_domain) >= 4 and root_domain in p_sub):
+            res = finalize_name(p)
+            if res:
+                return res
+
+    # 2. Pick candidate that doesn't start with generic SEO prefixes
+    candidates = [p for p in valid_parts if not any(p.lower().startswith(b) for b in ["best ", "top ", "welcome ", "#1 ", "find ", "cheap "])]
+    if candidates:
+        best = min(candidates, key=lambda c: abs(len(c.split()) - 3))
+        res = finalize_name(best)
+        if res:
+            return res
+
+    res = finalize_name(valid_parts[0])
+    return res or fallback_name
 
 def clean_lead_payload(raw_lead: dict) -> dict:
     """Normalizes all fields before database entry."""

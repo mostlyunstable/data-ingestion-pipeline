@@ -29,6 +29,16 @@ SKIP_DOMAINS = {
     "upwork.com", "fiverr.com", "freelancer.com", "toptal.com", "indeed.com", "glassdoor.com", "naukri.com",
     "investopedia.com", "coursera.org", "udemy.com", "forbes.com", "techcrunch.com", "crunchbase.com",
     "gov.in", "nic.in", "reliancedigital.in", "flipkart.com",
+    "sulekha.com", "zhihu.com", "stylecraze.com", "practo.com", "lybrate.com", "magicbricks.com",
+    "99acres.com", "housing.com", "lbb.in", "yappe.in", "quikr.com", "olx.in", "sehat.com",
+    "credihealth.com", "vaidam.com", "clinicspots.com", "clinicsspots.com", "topdoctors.co.uk",
+    "realself.com", "healthshare.com.au", "doctify.com", "zocdoc.com", "healthgrades.com",
+    "vitals.com", "webmd.com", "healthline.com", "goodfirms.co", "sortlist.com", "bark.com",
+    "thumbtack.com", "angi.com", "houzz.com", "architecturaldigest.com", "londonprivatedentists.com",
+    "whatclinic.com", "dentalplans.com", "1800dentist.com", "ratemds.com", "momjunction.com",
+    "femina.in", "cosmopolitan.in", "vogue.in", "gqindia.com", "timeout.com", "tripadvisor.com",
+    "foursquare.com", "lawyerratings.com", "avvo.com", "findlaw.com", "justia.com", "lawyers.com",
+    "realtor.com", "zillow.com", "redfin.com", "rightmove.co.uk", "zoopla.co.uk", "onthemarket.com",
 
     # News, Media & Content Publishers (not prospective client businesses)
     "theverge.com", "politico.com", "wsj.com", "nytimes.com", "bloomberg.com", "reuters.com",
@@ -40,6 +50,11 @@ SKIP_DOMAINS = {
 
     # Personal hobby, retro, art, and non-commercial portfolio sites
     "dosdays.co.uk", "niklasroy.com", "thoreaubasic.com", "stillwet.art", "dmitrybrant.com",
+
+    # Educational dictionaries, encyclopedias, and reference portals (not SMB clients)
+    "dictionary.net", "vocabulary.com", "oxfordlearnersdictionaries.com", "britannica.com",
+    "merriam-webster.com", "wordreference.com", "cambridge.org", "collinsdictionary.com",
+    "thesaurus.com", "dictionary.com", "wiktionary.org", "wikipedia.org", "dictionaryapi.dev",
 
     # Platform hubs & Foundation models
     "news.ycombinator.com", "ycombinator.com", "producthunt.com",
@@ -135,12 +150,18 @@ def clean_target_domain(url: str) -> str:
             "ajio.com", "only.in", "wforwoman.com", "thecollective.in", "luxepolis.com", "luxuryescapes.com",
             "toprankers.com", "tophat.com", "feedough.com", "edtechhub.org", "nirankarihealthcity.org",
             "projectreal.gg", "ama.org", "zohorecruit.in", "mpcareer.in", "govtjobguru.in", "plutuseducation.com",
-            "digitalregenesys.com"
+            "digitalregenesys.com", "zerodha.com", "zerodha.tech", "groww.in", "upstox.com", "angelone.in",
+            "newtonschool.co", "scaler.com", "private.com"
         ]):
             return ""
 
-        # Filter out institutional, railway, bank, and metro keywords
-        if any(k in domain for k in ["metrorail", "railway", "bank.", ".bank", "zohorecruit"]):
+        # Filter out institutional, railway, bank, directory, adult, casino, and aggregator keywords
+        if any(k in domain for k in [
+            "metrorail", "railway", "bank.", ".bank", "zohorecruit",
+            "privatedentists", "findadentist", "findadoctor", "doctorlisting", "clinicdirectory",
+            "bestclinics", "dentistnearme", "comparepractices", "lawyerlisting", "directory.",
+            "top10", "top-10", "bestin", "casino", "betting", "adult", "porn"
+        ]):
             return ""
 
         base = domain.rsplit('.', 1)[0]
@@ -279,31 +300,17 @@ def hunt_businesses(niche: str, location: str, limit: int = 25) -> list:
     results = []
     seen = set()
 
-    # 1. First probe GitHub Organizations for tech/agency niches
-    if any(k in niche.lower() for k in ["tech", "software", "agency", "saas", "app", "dev", "ai"]):
-        loc = location or random.choice(["Bangalore", "Mumbai", "San Francisco", "London", "Austin"])
-        kw = random.choice(["agency", "tech", "software", "solutions", "labs", "studio"])
-        gh_results = discover_github_tech_companies(location=loc, keyword=kw, limit=min(limit, 10))
-        for u in gh_results:
-            d = clean_target_domain(u)
-            if d and d not in seen:
-                seen.add(d)
-                results.append(u)
-
-    if len(results) >= limit:
-        return results[:limit]
-
-    # 2. Organic Web Search Queries
+    # 1. Organic Web Search Queries across commercial hubs
     if location:
         queries = [
-            f'"{niche}" in {location} official website',
-            f"{niche} companies {location}",
-            f"top {niche} in {location}"
+            f'"{niche}" {location} official website -directory -listing -jobs',
+            f'"{niche}" {location} clinic appointment booking -jobs',
+            f'"{niche}" {location} contact us -wikipedia'
         ]
     else:
         queries = [
-            f"{niche} companies",
-            f"top {niche} agencies"
+            f'"{niche}" official website -directory -listing',
+            f'"{niche}" boutique clinic practice'
         ]
 
     for q in queries:

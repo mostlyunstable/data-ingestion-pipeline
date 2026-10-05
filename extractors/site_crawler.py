@@ -118,13 +118,12 @@ async def crawl_single_company(target_url_or_domain: str, niche: str = "", sourc
 
         result["tech_stack"] = detect_tech_stack(home_html, home_soup)
 
-        # Step 2: Discover High-Value Subpages (Contact, About, Team)
+        # Step 2: Discover High-Value Subpages (Contact, About, Team, Doctors, Founders)
         subpage_urls = set()
         for a in home_soup.find_all("a", href=True):
             href = a["href"].strip()
-            # Normalize internal link
             lower_href = href.lower()
-            if any(sub in lower_href for sub in ["contact", "about", "team", "privacy"]):
+            if any(sub in lower_href for sub in ["contact", "about", "team", "doctor", "dentist", "specialist", "founder", "leadership", "meet"]):
                 full_sub = urllib.parse.urljoin(result["website"], href)
                 # Keep only same domain
                 if extract_domain(full_sub) == domain:
@@ -132,7 +131,7 @@ async def crawl_single_company(target_url_or_domain: str, niche: str = "", sourc
 
         # If none found from links, probe common endpoints
         if not subpage_urls:
-            for sub in ["/contact", "/about", "/team"]:
+            for sub in ["/contact", "/about", "/team", "/doctors"]:
                 subpage_urls.add(f"https://{domain}{sub}")
 
         # Limit to top 4 candidate subpages for fast aggressive execution
@@ -163,13 +162,26 @@ async def crawl_single_company(target_url_or_domain: str, niche: str = "", sourc
                     elif v and not result[k]:
                         result[k] = v
 
+        # Convert sets to lists
+        result["emails"] = sorted(list(result["emails"]))
+        result["phones"] = sorted(list(result["phones"]))
+
         # Step 4: Infer Country & Geo Location
         country, city = detect_country_and_location(combined_text, result["phones"])
         result["country"] = country
         result["city"] = city
 
         # Step 5: Autonomous Service & Opportunity Audit
-        audit = audit_business_for_services(home_html, home_soup, result["company_name"], result["tech_stack"], result["industry_niche"])
+        audit = audit_business_for_services(
+            html_content=home_html,
+            soup=home_soup,
+            company_name=result["company_name"],
+            tech_stack=result["tech_stack"],
+            niche=result["industry_niche"],
+            combined_text=combined_text,
+            emails=result["emails"],
+            domain=domain
+        )
         result["service_match"] = audit["service_match"]
         result["opportunity_type"] = audit["opportunity_type"]
         result["audit_notes"] = audit["audit_notes"]
@@ -180,9 +192,5 @@ async def crawl_single_company(target_url_or_domain: str, niche: str = "", sourc
         result["confident_pitch"] = audit["confident_pitch"]
         result["lead_score"] = audit["lead_score"]
         result["pitch_hook"] = audit["pitch_hook"]
-
-    # Convert sets to lists
-    result["emails"] = sorted(list(result["emails"]))
-    result["phones"] = sorted(list(result["phones"]))
 
     return result

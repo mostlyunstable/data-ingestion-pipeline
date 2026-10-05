@@ -170,16 +170,9 @@ class AutopilotRotationManager:
                 return True
             return False
 
-        # Phase 1: Try newly launched startups from live RSS feeds
-        startup_targets = fetch_rss_startup_launches()
-        for u in startup_targets:
-            try_add_url(u)
-            if len(collected_targets) >= batch_size:
-                return collected_targets[:batch_size]
-
-        # Phase 2: Live Multi-Engine Search Radar across rotating commercial corridors
+        # Phase 1: Live Multi-Engine Search Radar across rotating commercial SMB corridors
         attempts = 0
-        max_radar_attempts = len(ROTATIONAL_BUYER_MATRICES)
+        max_radar_attempts = len(ROTATIONAL_BUYER_MATRICES) * 2
 
         while len(collected_targets) < batch_size and attempts < max_radar_attempts:
             corridor = ROTATIONAL_BUYER_MATRICES[self.current_index % len(ROTATIONAL_BUYER_MATRICES)]
@@ -195,7 +188,7 @@ class AutopilotRotationManager:
                 if len(collected_targets) >= batch_size:
                     return collected_targets[:batch_size]
 
-        # Phase 3: Verified High-Intent Target Corpus (Reservoir)
+        # Phase 2: Verified High-Intent Target SMB Reservoir
         shuffled_seed = list(VERIFIED_TARGET_SEED_CORPUS)
         random.shuffle(shuffled_seed)
 

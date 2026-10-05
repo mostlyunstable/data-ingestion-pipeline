@@ -4,7 +4,7 @@ from config import DB_PATH
 from transformers.cleaner import clean_company_brand_name
 from extractors.contact_miner import clean_email, clean_phone
 
-from transformers.opportunity_auditor import STOP_WORDS_AND_TITLES
+from transformers.opportunity_auditor import STOP_WORDS_AND_TITLES, infer_name_from_email, is_valid_name
 
 from extractors.search_radar import SKIP_DOMAINS, clean_target_domain
 
@@ -77,11 +77,14 @@ def run_self_healing_cycle() -> dict:
         # 3. Clean Company Name
         clean_name = clean_company_brand_name(company_name or "", domain or "")
 
-        # 4. Clean Contact Decision Maker Name
+        # 4. Clean Contact Decision Maker Name & Infer from email
         clean_contact = (contact_raw or "").strip()
-        if clean_contact:
-            words = clean_contact.lower().split()
-            if any(w in STOP_WORDS_AND_TITLES for w in words) or len(words) > 3 or len(words) == 0:
+        if clean_contact and not is_valid_name(clean_contact, domain or ""):
+            clean_contact = ""
+
+        if not clean_contact and clean_emails:
+            clean_contact = infer_name_from_email(clean_emails, domain or "")
+            if not is_valid_name(clean_contact, domain or ""):
                 clean_contact = ""
 
         # 5. Clean Website
@@ -92,15 +95,21 @@ def run_self_healing_cycle() -> dict:
         # 6. Repair Pitch & Hook greetings
         clean_pitch = pitch or ""
         clean_hook = hook or ""
-        if clean_name:
-            if clean_pitch:
-                clean_pitch = re.sub(r'^(Hi\s+).*?(\s+team!)', rf'\g<1>{clean_name}\g<2>', clean_pitch)
-                clean_pitch = re.sub(r'(Love what you\'re doing with\s+).*?(—especially)', rf'\g<1>{clean_name}\g<2>', clean_pitch)
-                clean_pitch = re.sub(r'^Hi\s+(?:and|the|our|best|a|an)!\s*', f'Hi {clean_name} team! ', clean_pitch)
-            if clean_hook:
-                clean_hook = re.sub(r'^(Hi\s+).*?(\s+team!)', rf'\g<1>{clean_name}\g<2>', clean_hook)
-                clean_hook = re.sub(r'(Love what you\'re doing with\s+).*?(—especially)', rf'\g<1>{clean_name}\g<2>', clean_hook)
-                clean_hook = re.sub(r'^Hi\s+(?:and|the|our|best|a|an)!\s*', f'Hi {clean_name} team! ', clean_hook)
+
+        if clean_contact:
+            if clean_contact.startswith("Dr."):
+                greeting = f"Hi {clean_contact}"
+            else:
+                greeting = f"Hi {clean_contact.split()[0]}"
+        else:
+            greeting = f"Hi {clean_name} team"
+
+        if clean_pitch:
+            clean_pitch = re.sub(r'^(?:Hi|Hello|Hey)\s+[^!\n]+[!\n]\s*', f'{greeting}! ', clean_pitch)
+            clean_pitch = re.sub(r'(Love what you\'re doing with\s+).*?(—especially)', rf'\g<1>{clean_name}\g<2>', clean_pitch)
+        if clean_hook:
+            clean_hook = re.sub(r'^(?:Hi|Hello|Hey)\s+[^!\n]+[!\n]\s*', f'{greeting}! ', clean_hook)
+            clean_hook = re.sub(r'(Love what you\'re doing with\s+).*?(—especially)', rf'\g<1>{clean_name}\g<2>', clean_hook)
 
         # Update record
         cursor.execute("""
