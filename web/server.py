@@ -168,6 +168,21 @@ async def api_update_status(lead_id: int, status: str = Query(...)):
     update_lead_status(lead_id, status)
     return {"status": "success", "lead_id": lead_id, "new_status": status}
 
+@app.post("/api/leads/{lead_id}/toggle-status")
+async def api_toggle_status(lead_id: int):
+    from core.database import get_db
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT status FROM leads WHERE id = ?", (lead_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return JSONResponse({"status": "error", "message": "Lead not found"}, status_code=404)
+    current_status = row[0] or "Yet to Explore"
+    new_status = "Contacted" if current_status == "Yet to Explore" else "Yet to Explore"
+    update_lead_status(lead_id, new_status)
+    return {"status": "success", "lead_id": lead_id, "new_status": new_status}
+
 @app.delete("/api/leads/{lead_id}")
 async def api_delete_lead(lead_id: int):
     delete_lead(lead_id)

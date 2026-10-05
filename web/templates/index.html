@@ -92,6 +92,13 @@
       box-shadow: 0 0 0 1px #0f172a;
     }
 
+    /* Text Overlap Prevention Utilities */
+    .wrap-safe {
+      overflow-wrap: break-word;
+      word-break: break-word;
+      white-space: normal;
+    }
+
     /* Subtle Minimalist Scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -117,49 +124,49 @@
 </head>
 <body class="min-h-screen selection:bg-slate-200 selection:text-slate-900 bg-slate-50/50">
 
-  <!-- Toast Container -->
+  <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Header -->
   <header class="border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
       
-      <!-- Minimal Brand Emblem (Clickable to reset all filters) -->
-      <div onclick="resetAllFilters()" class="flex items-center gap-3.5 cursor-pointer group" title="Reset all filters and view full warehouse">
-        <div class="w-9 h-9 rounded-xl bg-slate-900 group-hover:bg-slate-800 flex items-center justify-center text-white text-xs font-mono font-medium shadow-xs transition">
+      <!-- Minimal Brand Emblem -->
+      <div onclick="resetAllFilters()" class="flex items-center gap-3 cursor-pointer group min-w-0" title="Reset all filters and view full warehouse">
+        <div class="w-9 h-9 rounded-xl bg-slate-900 group-hover:bg-slate-800 flex items-center justify-center text-white text-xs font-mono font-medium shadow-xs transition shrink-0">
           OL
         </div>
-        <div>
+        <div class="min-w-0">
           <div class="flex items-center gap-2">
-            <h1 class="text-xs tracking-wider uppercase font-bold text-slate-900 group-hover:text-slate-700 transition">OmniLead</h1>
-            <span class="text-[9px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-md border border-slate-200 text-slate-600 bg-slate-100 font-medium">
+            <h1 class="text-xs tracking-wider uppercase font-bold text-slate-900 group-hover:text-slate-700 transition truncate">OmniLead</h1>
+            <span class="text-[9px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-md border border-slate-200 text-slate-600 bg-slate-100 font-medium shrink-0">
               Autopilot
             </span>
           </div>
-          <p class="text-[11px] text-slate-500 font-normal">
-            Autonomous Prospect Intelligence & Opportunity Pipeline
+          <p class="text-[11px] text-slate-500 font-normal hidden sm:block truncate">
+            Autonomous Prospect Intelligence & Pipeline
           </p>
         </div>
       </div>
 
       <!-- Action Suite -->
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-2 shrink-0">
         <!-- Self Healing Trigger -->
-        <button onclick="triggerSelfHeal()" id="self-heal-btn" class="btn-tactile px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs text-slate-600 hover:text-slate-900 transition flex items-center gap-2 bg-white shadow-xs" title="Execute Data Integrity Diagnostics">
+        <button onclick="triggerSelfHeal()" id="self-heal-btn" class="btn-tactile px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 bg-white shadow-xs" title="Execute Data Integrity Diagnostics">
           <i class="fa-solid fa-shield-halved text-xs text-slate-500"></i>
-          <span>Self-Heal</span>
+          <span class="hidden sm:inline">Self-Heal</span>
         </button>
 
         <!-- Fresh Ingestion -->
-        <button onclick="triggerAutonomousCycle()" id="sweep-btn" class="btn-tactile px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition flex items-center gap-2 shadow-xs" title="Extract 15 Fresh Targets Automatically">
+        <button onclick="triggerAutonomousCycle()" id="sweep-btn" class="btn-tactile px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition flex items-center gap-1.5 shadow-xs" title="Extract 15 Fresh Targets Automatically">
           <i class="fa-solid fa-arrow-down-long text-xs"></i>
           <span>Harvest 15 Leads</span>
         </button>
 
         <!-- CSV Export -->
-        <a href="/api/export-csv" onclick="showToast('Exporting leads warehouse to CSV...', 'info')" target="_blank" class="btn-tactile px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 transition flex items-center gap-2 shadow-xs" title="Download SQLite records as CSV">
+        <a href="/api/export-csv" onclick="showToast('Exporting leads warehouse to clean CSV...', 'info')" target="_blank" class="btn-tactile px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 transition flex items-center gap-1.5 shadow-xs" title="Download SQLite records as CSV">
           <i class="fa-solid fa-download text-xs text-slate-500"></i>
-          <span>Export CSV</span>
+          <span class="hidden sm:inline">Export CSV</span>
         </a>
 
         <!-- Refresh -->
@@ -172,53 +179,53 @@
   </header>
 
   <!-- Main Container -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-24 space-y-7">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24 space-y-6">
 
     <!-- KPI Metric Cards (Interactive Clickable Power Filters) -->
-    <section class="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-      <div onclick="toggleKpiFilter('all')" id="kpi-total" class="kpi-card p-4 rounded-xl shadow-xs relative group" title="Click to show all prospects">
+    <section class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+      <div onclick="toggleKpiFilter('all')" id="kpi-total" class="kpi-card p-3.5 rounded-xl shadow-xs relative group min-w-0" title="Click to show all prospects">
         <div class="flex items-center justify-between">
-          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Qualified Leads</p>
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium truncate">Total Qualified</p>
           <span class="text-[9px] text-slate-400 group-hover:text-slate-700 opacity-0 group-hover:opacity-100 transition mono">All</span>
         </div>
-        <p id="stat-total" class="text-2xl font-semibold text-slate-900 mt-1">0</p>
-        <span class="text-[10px] text-slate-500 font-mono">Stored in database</span>
+        <p id="stat-total" class="text-2xl font-semibold text-slate-900 mt-0.5">0</p>
+        <span class="text-[10px] text-slate-500 font-mono block truncate">Database warehouse</span>
       </div>
 
-      <div onclick="toggleKpiFilter('email')" id="kpi-emails" class="kpi-card p-4 rounded-xl shadow-xs relative group" title="Click to filter prospects with verified emails">
+      <div onclick="toggleKpiFilter('email')" id="kpi-emails" class="kpi-card p-3.5 rounded-xl shadow-xs relative group min-w-0" title="Click to filter prospects with verified emails">
         <div class="flex items-center justify-between">
-          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Direct Inboxes</p>
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium truncate">Direct Inboxes</p>
           <span class="text-[9px] text-slate-400 group-hover:text-slate-700 opacity-0 group-hover:opacity-100 transition mono">Filter</span>
         </div>
-        <p id="stat-emails" class="text-2xl font-semibold text-slate-900 mt-1">0</p>
-        <span class="text-[10px] text-slate-500 font-mono">Verified contacts</span>
+        <p id="stat-emails" class="text-2xl font-semibold text-slate-900 mt-0.5">0</p>
+        <span class="text-[10px] text-slate-500 font-mono block truncate">Verified emails</span>
       </div>
 
-      <div onclick="toggleKpiFilter('phone')" id="kpi-phones" class="kpi-card p-4 rounded-xl shadow-xs relative group" title="Click to filter prospects with phone numbers">
+      <div onclick="toggleKpiFilter('phone')" id="kpi-phones" class="kpi-card p-3.5 rounded-xl shadow-xs relative group min-w-0" title="Click to filter prospects with phone numbers">
         <div class="flex items-center justify-between">
-          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Direct Phones</p>
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium truncate">Direct Phones</p>
           <span class="text-[9px] text-slate-400 group-hover:text-slate-700 opacity-0 group-hover:opacity-100 transition mono">Filter</span>
         </div>
-        <p id="stat-phones" class="text-2xl font-semibold text-slate-900 mt-1">0</p>
-        <span class="text-[10px] text-slate-500 font-mono">India & Global</span>
+        <p id="stat-phones" class="text-2xl font-semibold text-slate-900 mt-0.5">0</p>
+        <span class="text-[10px] text-slate-500 font-mono block truncate">India & Global</span>
       </div>
 
-      <div onclick="toggleKpiFilter('linkedin')" id="kpi-linkedin" class="kpi-card p-4 rounded-xl shadow-xs relative group" title="Click to filter prospects with LinkedIn profiles">
+      <div onclick="toggleKpiFilter('linkedin')" id="kpi-linkedin" class="kpi-card p-3.5 rounded-xl shadow-xs relative group min-w-0" title="Click to filter prospects with LinkedIn profiles">
         <div class="flex items-center justify-between">
-          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Profiles Tracked</p>
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium truncate">Profiles Tracked</p>
           <span class="text-[9px] text-slate-400 group-hover:text-slate-700 opacity-0 group-hover:opacity-100 transition mono">Filter</span>
         </div>
-        <p id="stat-linkedin" class="text-2xl font-semibold text-slate-900 mt-1">0</p>
-        <span class="text-[10px] text-slate-500 font-mono">Leadership identified</span>
+        <p id="stat-linkedin" class="text-2xl font-semibold text-slate-900 mt-0.5">0</p>
+        <span class="text-[10px] text-slate-500 font-mono block truncate">Decision makers</span>
       </div>
 
-      <div onclick="cycleCountryFilter()" id="kpi-countries" class="kpi-card p-4 rounded-xl shadow-xs relative group" title="Click to cycle territories">
+      <div onclick="cycleCountryFilter()" id="kpi-countries" class="kpi-card p-3.5 rounded-xl shadow-xs relative group min-w-0 col-span-2 sm:col-span-1" title="Click to cycle territories">
         <div class="flex items-center justify-between">
-          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Territories</p>
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium truncate">Territories</p>
           <span id="country-active-tag" class="text-[9px] text-slate-400 group-hover:text-slate-700 opacity-0 group-hover:opacity-100 transition mono">Cycle</span>
         </div>
-        <p id="stat-countries" class="text-2xl font-semibold text-slate-900 mt-1">0</p>
-        <span id="country-subtitle" class="text-[10px] text-slate-500 font-mono">India, US, UK, Global</span>
+        <p id="stat-countries" class="text-2xl font-semibold text-slate-900 mt-0.5">0</p>
+        <span id="country-subtitle" class="text-[10px] text-slate-500 font-mono block truncate">India & International</span>
       </div>
     </section>
 
@@ -245,50 +252,71 @@
     </div>
 
     <!-- Navigation & Filter Bar -->
-    <section class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
+    <section class="space-y-2.5">
       
-      <!-- Category Filter Pills with Live Counters -->
-      <div class="flex flex-wrap items-center gap-1.5">
-        <button onclick="setServiceFilter('')" id="pill-all" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-white transition">
-          <span id="label-all">All Opportunities</span>
-        </button>
-        <button onclick="setServiceFilter('Chatbots')" id="pill-Chatbots" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
-          <span id="label-Chatbots">Chatbots</span>
-        </button>
-        <button onclick="setServiceFilter('Web Development')" id="pill-Web" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
-          <span id="label-Web">Web Dev</span>
-        </button>
-        <button onclick="setServiceFilter('App Development')" id="pill-App" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
-          <span id="label-App">Mobile Apps</span>
-        </button>
-        <button onclick="setServiceFilter('Automation')" id="pill-Auto" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
-          <span id="label-Auto">Automation</span>
-        </button>
-        <button onclick="setServiceFilter('Custom Pipelines')" id="pill-Pipe" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
-          <span id="label-Pipe">Pipelines</span>
-        </button>
-      </div>
-
-      <!-- Search & View Toggle -->
-      <div class="flex items-center gap-2.5">
-        <div class="relative w-64">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-          <input type="text" id="filter-search" oninput="handleSearchInput()" placeholder="Search prospects..." 
-                 class="w-full pl-8.5 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition">
-          <button onclick="clearSearchInput()" id="clear-search-btn" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 text-xs p-0.5" title="Clear search">
-            <i class="fa-solid fa-xmark"></i>
+      <!-- Primary Controls: Status & Category Filter Pills -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-3 rounded-xl bg-white border border-slate-200 shadow-xs">
+        
+        <!-- Status Switcher (Yet to Explore vs Done) -->
+        <div class="flex items-center gap-1.5 border-b lg:border-b-0 pb-2.5 lg:pb-0 lg:border-r lg:pr-3 border-slate-200">
+          <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400 mr-1 hidden sm:inline">Status:</span>
+          <button onclick="setStatusFilter('')" id="status-pill-all" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 text-white transition">
+            <span id="label-status-all">All</span>
+          </button>
+          <button onclick="setStatusFilter('Yet to Explore')" id="status-pill-pending" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-1">
+            <i class="fa-regular fa-circle text-[9px] text-slate-400"></i>
+            <span id="label-status-pending">Yet to Explore</span>
+          </button>
+          <button onclick="setStatusFilter('Contacted')" id="status-pill-done" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-1">
+            <i class="fa-solid fa-check text-[10px] text-emerald-600"></i>
+            <span id="label-status-done">Done</span>
           </button>
         </div>
 
-        <!-- View Switcher -->
-        <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-          <button onclick="setViewMode('cards')" id="view-cards-btn" class="btn-tactile px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-2xs transition">
-            Cards
+        <!-- Service Category Pills -->
+        <div class="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+          <button onclick="setServiceFilter('')" id="pill-all" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 text-white transition">
+            <span id="label-all">All Services</span>
           </button>
-          <button onclick="setViewMode('table')" id="view-table-btn" class="btn-tactile px-2.5 py-1 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 transition">
-            Table
+          <button onclick="setServiceFilter('Chatbots')" id="pill-Chatbots" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
+            <span id="label-Chatbots">Chatbots</span>
+          </button>
+          <button onclick="setServiceFilter('Web Development')" id="pill-Web" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
+            <span id="label-Web">Web Dev</span>
+          </button>
+          <button onclick="setServiceFilter('App Development')" id="pill-App" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
+            <span id="label-App">Mobile Apps</span>
+          </button>
+          <button onclick="setServiceFilter('Automation')" id="pill-Auto" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
+            <span id="label-Auto">Automation</span>
+          </button>
+          <button onclick="setServiceFilter('Custom Pipelines')" id="pill-Pipe" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
+            <span id="label-Pipe">Pipelines</span>
           </button>
         </div>
+
+        <!-- Search & View Toggle -->
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="relative w-52 sm:w-60">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <input type="text" id="filter-search" oninput="handleSearchInput()" placeholder="Search prospects..." 
+                   class="w-full pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition">
+            <button onclick="clearSearchInput()" id="clear-search-btn" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 text-xs p-0.5" title="Clear search">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- View Switcher -->
+          <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 shrink-0">
+            <button onclick="setViewMode('cards')" id="view-cards-btn" class="btn-tactile px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-2xs transition">
+              Cards
+            </button>
+            <button onclick="setViewMode('table')" id="view-table-btn" class="btn-tactile px-2.5 py-1 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 transition">
+              Table
+            </button>
+          </div>
+        </div>
+
       </div>
 
     </section>
@@ -303,12 +331,13 @@
       <table class="w-full text-left text-xs text-slate-700">
         <thead class="bg-slate-50/80 text-slate-500 font-mono uppercase text-[10px] tracking-wider border-b border-slate-200">
           <tr>
-            <th class="py-3 px-4 font-medium">Business</th>
-            <th class="py-3 px-4 font-medium">Opportunity</th>
-            <th class="py-3 px-4 font-medium">Advantage (Praise)</th>
-            <th class="py-3 px-4 font-medium">Identified Bottleneck</th>
-            <th class="py-3 px-4 font-medium">Direct Inboxes / Contacts</th>
-            <th class="py-3 px-4 text-right font-medium">Action</th>
+            <th class="py-3 px-3.5 font-medium">Status</th>
+            <th class="py-3 px-3.5 font-medium">Business</th>
+            <th class="py-3 px-3.5 font-medium">Opportunity</th>
+            <th class="py-3 px-3.5 font-medium">Strengths (Praise)</th>
+            <th class="py-3 px-3.5 font-medium">Bottleneck Identified</th>
+            <th class="py-3 px-3.5 font-medium">Direct Inboxes</th>
+            <th class="py-3 px-3.5 text-right font-medium">Action</th>
           </tr>
         </thead>
         <tbody id="table-body" class="divide-y divide-slate-100 bg-white">
@@ -324,7 +353,7 @@
       </div>
       <div>
         <h3 id="empty-state-title" class="text-sm font-semibold text-slate-900">No matching prospects found</h3>
-        <p id="empty-state-desc" class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+        <p id="empty-state-desc" class="text-xs text-slate-500 mt-1 max-w-sm mx-auto wrap-safe">
           Harvest new leads or adjust your active search filters.
         </p>
       </div>
@@ -332,8 +361,8 @@
         <button onclick="resetAllFilters()" class="btn-tactile px-3.5 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-medium shadow-2xs transition">
           Clear Filters
         </button>
-        <button onclick="triggerAutonomousCycle()" class="btn-tactile px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium inline-flex items-center gap-2 shadow-xs transition">
-          <i class="fa-solid fa-arrow-down-long text-xs"></i> Harvest Leads
+        <button onclick="triggerAutonomousCycle()" class="btn-tactile px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium inline-flex items-center gap-1.5 shadow-xs transition">
+          <i class="fa-solid fa-arrow-down-long text-xs"></i> Harvest 15 Leads
         </button>
       </div>
     </div>
@@ -349,8 +378,12 @@
       </button>
 
       <!-- Modal Header -->
-      <div class="space-y-1">
-        <div class="flex items-center gap-2">
+      <div class="space-y-1.5 min-w-0 pr-8">
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- 1-Click Status Toggle Inside Modal -->
+          <button onclick="toggleModalLeadStatus()" id="modal-status-badge" class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider transition flex items-center gap-1 font-medium" title="Click to toggle status">
+            Yet to Explore
+          </button>
           <button onclick="filterFromModalService()" id="modal-service-badge" class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition" title="Filter by this service">
             Service Match
           </button>
@@ -358,45 +391,45 @@
             Territory
           </button>
         </div>
-        <h2 id="modal-company-name" class="text-lg font-semibold text-slate-900 tracking-tight pt-1">Company Name</h2>
-        <a id="modal-website-link" href="#" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-600 hover:text-slate-900 hover:underline inline-flex items-center gap-1.5 mono font-normal">
+        <h2 id="modal-company-name" class="text-lg font-semibold text-slate-900 tracking-tight pt-1 wrap-safe">Company Name</h2>
+        <a id="modal-website-link" href="#" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-600 hover:text-slate-900 hover:underline inline-flex items-center gap-1.5 mono font-normal truncate max-w-full">
           <span id="modal-domain">domain.com</span>
-          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400 shrink-0"></i>
         </a>
       </div>
 
       <!-- Business Summary -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-        <div>
+        <div class="min-w-0">
           <p class="text-[10px] uppercase tracking-wider text-slate-400 font-mono">Decision Maker</p>
-          <p id="modal-contact-name" class="text-xs font-medium text-slate-900 mt-0.5">Founding & Leadership Team</p>
+          <p id="modal-contact-name" class="text-xs font-medium text-slate-900 mt-0.5 truncate">Founding & Leadership Team</p>
         </div>
-        <div>
+        <div class="min-w-0">
           <p class="text-[10px] uppercase tracking-wider text-slate-400 font-mono">Core Commercial Model</p>
-          <p id="modal-business-summary" class="text-xs text-slate-700 mt-0.5 leading-relaxed">Summary...</p>
+          <p id="modal-business-summary" class="text-xs text-slate-700 mt-0.5 leading-relaxed wrap-safe">Summary...</p>
         </div>
       </div>
 
       <!-- Strengths vs Technical Flaw -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1 min-w-0">
           <p class="text-[10px] uppercase tracking-wider text-emerald-800 font-mono flex items-center gap-1 font-semibold">
             <span>✓</span> Established Advantage (Praise)
           </p>
-          <p id="modal-where-good" class="text-xs text-slate-700 leading-relaxed">Strengths...</p>
+          <p id="modal-where-good" class="text-xs text-slate-700 leading-relaxed wrap-safe">Strengths...</p>
         </div>
 
-        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1 min-w-0">
           <p class="text-[10px] uppercase tracking-wider text-rose-800 font-mono flex items-center gap-1 font-semibold">
             <span>✕</span> Technical Bottleneck (Opportunity)
           </p>
-          <p id="modal-where-lacking" class="text-xs text-slate-700 leading-relaxed">Weaknesses...</p>
+          <p id="modal-where-lacking" class="text-xs text-slate-700 leading-relaxed wrap-safe">Weaknesses...</p>
         </div>
       </div>
 
       <!-- Confident Outreach Proposition -->
       <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xs font-mono uppercase tracking-wider text-slate-700 flex items-center gap-1.5 font-semibold">
             <span>◈</span> Outreach Proposition
           </span>
@@ -411,17 +444,17 @@
             </button>
           </div>
         </div>
-        <textarea id="modal-pitch-textarea" readonly rows="6" class="w-full text-xs text-slate-800 leading-relaxed font-mono bg-white p-3 rounded-lg border border-slate-200 resize-none focus:outline-none focus:border-slate-400 shadow-2xs"></textarea>
+        <textarea id="modal-pitch-textarea" readonly rows="6" class="w-full text-xs text-slate-800 leading-relaxed font-mono bg-white p-3 rounded-lg border border-slate-200 resize-none focus:outline-none focus:border-slate-400 shadow-2xs wrap-safe"></textarea>
       </div>
 
       <!-- Direct Channels -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 min-w-0">
           <p class="text-[10px] uppercase tracking-wider text-slate-400 font-mono">Direct Inboxes</p>
           <div id="modal-emails" class="space-y-1 text-xs mono"></div>
         </div>
 
-        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 min-w-0">
           <p class="text-[10px] uppercase tracking-wider text-slate-400 font-mono">Phone & WhatsApp</p>
           <div id="modal-phones" class="space-y-1 text-xs mono"></div>
         </div>
@@ -449,6 +482,7 @@
     let searchDebounceTimeout = null;
     let selectedServiceFilter = '';
     let selectedCountryFilter = '';
+    let selectedStatusFilter = '';
     let filterEmailOnly = false;
     let filterPhoneOnly = false;
     let filterLinkedinOnly = false;
@@ -461,12 +495,12 @@
       if (!container) return;
 
       const toast = document.createElement('div');
-      const icon = type === 'success' ? 'fa-circle-check text-slate-800' :
+      const icon = type === 'success' ? 'fa-circle-check text-emerald-600' :
                    type === 'error' ? 'fa-circle-exclamation text-rose-600' :
                    'fa-circle-info text-slate-700';
 
       toast.className = "flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-slate-200 text-slate-800 text-xs rounded-xl shadow-lg transform translate-y-2 opacity-0 transition-all duration-200 font-medium";
-      toast.innerHTML = `<i class="fa-solid ${icon} text-xs"></i> <span>${message}</span>`;
+      toast.innerHTML = `<i class="fa-solid ${icon} text-xs shrink-0"></i> <span class="truncate max-w-xs">${message}</span>`;
 
       container.appendChild(toast);
 
@@ -491,7 +525,7 @@
           await navigator.clipboard.writeText(text);
           copied = true;
         } catch (e) {
-          console.warn("navigator.clipboard failed, fallback used", e);
+          console.warn("navigator.clipboard fallback", e);
         }
       }
       if (!copied) {
@@ -556,9 +590,14 @@
           availableCountries = data.countries;
         }
 
-        // Update Pill Counts
+        // Status Counts
+        document.getElementById('label-status-all').innerText = `All (${data.total_leads || 0})`;
+        document.getElementById('label-status-pending').innerText = `Yet to Explore (${data.yet_to_explore || 0})`;
+        document.getElementById('label-status-done').innerText = `Done (${data.contacted || 0})`;
+
+        // Service Counts
         const services = data.services || {};
-        document.getElementById('label-all').innerText = `All (${data.total_leads || 0})`;
+        document.getElementById('label-all').innerText = `All Services (${data.total_leads || 0})`;
         document.getElementById('label-Chatbots').innerText = `Chatbots (${services['Chatbots'] || 0})`;
         document.getElementById('label-Web').innerText = `Web Dev (${services['Web Development'] || 0})`;
         document.getElementById('label-App').innerText = `Mobile Apps (${services['App Development'] || 0})`;
@@ -567,6 +606,29 @@
       } catch (e) {
         console.error("Stats load error", e);
       }
+    }
+
+    // Status Filter Switcher
+    function setStatusFilter(status) {
+      selectedStatusFilter = status;
+      const pills = {
+        '': 'status-pill-all',
+        'Yet to Explore': 'status-pill-pending',
+        'Contacted': 'status-pill-done'
+      };
+
+      Object.entries(pills).forEach(([key, id]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (key === status) {
+          el.className = "filter-pill px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 text-white transition";
+        } else {
+          el.className = "filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition";
+        }
+      });
+
+      showToast(status ? `Showing: ${status}` : 'Showing all statuses', 'info', 1200);
+      loadLeads();
     }
 
     // Service Filter Pills
@@ -585,19 +647,18 @@
         const el = document.getElementById(id);
         if (!el) return;
         if (key === svc) {
-          el.className = "filter-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-white transition";
+          el.className = "filter-pill px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 text-white transition";
         } else {
-          el.className = "filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition";
+          el.className = "filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition";
         }
       });
 
-      showToast(svc ? `Filter applied: ${svc}` : 'Showing all opportunities', 'info', 1400);
+      showToast(svc ? `Filter applied: ${svc}` : 'Showing all services', 'info', 1200);
       loadLeads();
     }
 
     // Interactive KPI Metric Power Filters
     function toggleKpiFilter(type) {
-      // Remove active states
       ['kpi-total', 'kpi-emails', 'kpi-phones', 'kpi-linkedin'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('active-kpi');
@@ -687,6 +748,7 @@
     function resetAllFilters() {
       selectedServiceFilter = '';
       selectedCountryFilter = '';
+      selectedStatusFilter = '';
       filterEmailOnly = false;
       filterPhoneOnly = false;
       filterLinkedinOnly = false;
@@ -703,6 +765,7 @@
       document.getElementById('country-subtitle').innerText = 'India, US, UK, Global';
 
       setServiceFilter('');
+      setStatusFilter('');
       showToast('All filters reset • Showing full warehouse', 'info');
     }
 
@@ -742,6 +805,66 @@
       }, 500);
     }
 
+    // Toggle Lead Status (Yet to Explore vs Done)
+    async function toggleLeadStatus(leadId, event) {
+      if (event) event.stopPropagation();
+      try {
+        const res = await fetch(`/api/leads/${leadId}/toggle-status`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+          const isDone = data.new_status === 'Contacted';
+          showToast(isDone ? 'Marked as Done (Contacted) ✓' : 'Marked as Yet to Explore', 'success');
+          
+          const lead = currentLeads.find(l => l.id === leadId);
+          if (lead) lead.status = data.new_status;
+          
+          renderAllViews(currentLeads);
+          loadStats();
+
+          // Update active modal if open
+          if (activeModalLead && activeModalLead.id === leadId) {
+            updateModalStatusBadge(data.new_status);
+          }
+        }
+      } catch (e) {
+        showToast('Failed to update status', 'error');
+      }
+    }
+
+    async function markLeadAsContacted(leadId) {
+      try {
+        const res = await fetch(`/api/leads/${leadId}/status?status=Contacted`, { method: 'PATCH' });
+        if (res.ok) {
+          const lead = currentLeads.find(l => l.id === leadId);
+          if (lead) lead.status = 'Contacted';
+          renderAllViews(currentLeads);
+          loadStats();
+          if (activeModalLead && activeModalLead.id === leadId) {
+            updateModalStatusBadge('Contacted');
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function toggleModalLeadStatus() {
+      if (!activeModalLead) return;
+      toggleLeadStatus(activeModalLead.id);
+    }
+
+    function updateModalStatusBadge(status) {
+      const badge = document.getElementById('modal-status-badge');
+      const isDone = status === 'Contacted' || status === 'Done';
+      if (isDone) {
+        badge.className = "btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200 transition flex items-center gap-1 font-medium";
+        badge.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i> Done`;
+      } else {
+        badge.className = "btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition flex items-center gap-1 font-medium";
+        badge.innerHTML = `<i class="fa-regular fa-circle text-slate-400"></i> Yet to Explore`;
+      }
+    }
+
     // Load Leads with Real-Time Filtering
     async function loadLeads() {
       const search = document.getElementById('filter-search').value;
@@ -749,6 +872,7 @@
         search: search,
         service_match: selectedServiceFilter,
         country: selectedCountryFilter,
+        status: selectedStatusFilter,
         has_email: filterEmailOnly,
         has_phone: filterPhoneOnly,
         has_linkedin: filterLinkedinOnly
@@ -777,9 +901,12 @@
         
         const titleEl = document.getElementById('empty-state-title');
         const descEl = document.getElementById('empty-state-desc');
-        if (selectedServiceFilter) {
+        if (selectedStatusFilter) {
+          titleEl.innerText = `No prospects with status: "${selectedStatusFilter}"`;
+          descEl.innerText = 'Adjust your status filter or harvest fresh opportunities.';
+        } else if (selectedServiceFilter) {
           titleEl.innerText = `No leads found for ${selectedServiceFilter}`;
-          descEl.innerText = `Click "Harvest Leads" to start an autonomous scan for ${selectedServiceFilter}.`;
+          descEl.innerText = `Click "Harvest 15 Leads" to start an autonomous scan for ${selectedServiceFilter}.`;
         } else {
           titleEl.innerText = 'No matching prospects found';
           descEl.innerText = 'Harvest fresh leads or adjust your active search filters.';
@@ -799,9 +926,10 @@
       copyToClipboard(email, `Copied email: ${email}`);
       const lead = currentLeads.find(l => l.id === leadId);
       const pitch = lead ? (lead.confident_pitch || lead.pitch_hook || '') : '';
-      const subject = `Quick idea for ${companyName}`;
+      const subject = `Quick question regarding ${companyName}`;
       const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(pitch)}`;
       window.open(gmailUrl, '_blank');
+      markLeadAsContacted(leadId);
     }
 
     function handlePhoneClick(event, phone) {
@@ -819,9 +947,10 @@
       const waUrl = `https://wa.me/${digits}?text=${encodeURIComponent(pitch)}`;
       showToast('Opening WhatsApp with pre-filled pitch...', 'info');
       window.open(waUrl, '_blank');
+      markLeadAsContacted(leadId);
     }
 
-    // Render Minimalist Cards View
+    // Render Minimalist Cards View with Status Checkmark & Overlap Protection
     function renderCards(leads) {
       const container = document.getElementById('cards-container');
       container.innerHTML = leads.map(lead => {
@@ -830,15 +959,17 @@
         const websiteUrl = lead.website && lead.website.startsWith('http') ? lead.website : `https://${lead.domain}`;
         const contactName = lead.contact_name ? lead.contact_name : 'Founding & Leadership Team';
         const safeCompany = (lead.company_name || lead.domain).replace(/'/g, "\\'");
+        const isDone = lead.status === 'Contacted' || lead.status === 'Done';
 
         // Contact action triggers
         let contactButtons = [];
         if (emails.length > 0) {
           contactButtons.push(`
             <button onclick="handleEmailClick(event, '${emails[0]}', '${safeCompany}', ${lead.id})" 
-                    class="btn-tactile px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition" 
-                    title="Click to copy & open in Gmail">
-              <i class="fa-regular fa-envelope text-[10px] text-slate-500"></i> ${emails[0]}
+                    class="btn-tactile px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition max-w-full" 
+                    title="Copy & open in Gmail: ${emails[0]}">
+              <i class="fa-regular fa-envelope text-[10px] text-slate-500 shrink-0"></i> 
+              <span class="truncate">${emails[0]}</span>
             </button>
           `);
         }
@@ -847,69 +978,88 @@
           const digits = rawNum.replace(/\D/g, '');
           contactButtons.push(`
             <button onclick="handlePhoneClick(event, '${rawNum}')" 
-                    class="btn-tactile px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition" 
-                    title="Click to copy & call">
+                    class="btn-tactile px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition shrink-0" 
+                    title="Click to copy & call: ${rawNum}">
               <i class="fa-solid fa-phone text-[10px] text-slate-500"></i> ${rawNum}
             </button>
           `);
           if (digits.length >= 10) {
             contactButtons.push(`
               <button onclick="handleWhatsAppClick(event, '${digits}', ${lead.id})" 
-                      class="btn-tactile px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition" 
-                      title="Open WhatsApp chat with prefilled pitch">
+                      class="btn-tactile px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition shrink-0" 
+                      title="Open WhatsApp chat with pre-filled pitch">
                 <i class="fa-brands fa-whatsapp text-xs text-slate-500"></i> WhatsApp
               </button>
             `);
           }
         }
 
+        // Status pill & 1-click toggle
+        const statusBadgeHtml = isDone ? `
+          <button onclick="toggleLeadStatus(${lead.id}, event)" 
+                  class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium flex items-center gap-1 shrink-0" 
+                  title="Click to toggle back to Yet to Explore">
+            <i class="fa-solid fa-check text-[10px] text-emerald-600"></i> Done
+          </button>
+        ` : `
+          <button onclick="toggleLeadStatus(${lead.id}, event)" 
+                  class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 flex items-center gap-1 shrink-0" 
+                  title="Click to mark as Done (Contacted)">
+            <i class="fa-regular fa-circle text-[9px] text-slate-400"></i> Yet to explore
+          </button>
+        `;
+
         return `
-          <div id="lead-card-${lead.id}" class="card-minimal p-4.5 rounded-xl flex flex-col justify-between space-y-3.5 shadow-2xs">
+          <div id="lead-card-${lead.id}" class="card-minimal p-4 rounded-xl flex flex-col justify-between space-y-3.5 shadow-2xs min-w-0">
             
-            <!-- Card Header -->
-            <div class="space-y-2">
-              <div class="flex items-center justify-between gap-2">
-                <button onclick="setServiceFilter('${lead.service_match}')" 
-                        class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition" 
-                        title="Click to filter by ${lead.service_match}">
-                  ${lead.service_match || 'Digital'}
-                </button>
-                <button onclick="filterByCardCountry('${lead.country}')" 
-                        class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200 transition" 
-                        title="Click to filter by ${lead.country || 'Global'}">
-                  ${lead.country || 'Global'}
-                </button>
+            <!-- Card Header: Badges & Status -->
+            <div class="space-y-2 min-w-0">
+              <div class="flex items-center justify-between gap-1.5 min-w-0">
+                <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
+                  <button onclick="setServiceFilter('${lead.service_match}')" 
+                          class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition shrink-0" 
+                          title="Click to filter by ${lead.service_match}">
+                    ${lead.service_match || 'Digital'}
+                  </button>
+                  <button onclick="filterByCardCountry('${lead.country}')" 
+                          class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200 transition shrink-0" 
+                          title="Click to filter by ${lead.country || 'Global'}">
+                    ${lead.country || 'Global'}
+                  </button>
+                </div>
+                ${statusBadgeHtml}
               </div>
 
-              <div>
+              <!-- Company & Model (Overlap-Proof) -->
+              <div class="min-w-0 space-y-0.5">
                 <a href="${websiteUrl}" target="_blank" rel="noopener noreferrer" 
-                   class="btn-tactile text-sm font-semibold text-slate-900 hover:text-slate-600 transition inline-flex items-center gap-1.5 group">
-                  <span>${lead.company_name || lead.domain}</span>
-                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400 group-hover:text-slate-600 transition"></i>
+                   class="btn-tactile text-sm font-semibold text-slate-900 hover:text-slate-600 transition inline-flex items-center gap-1.5 group max-w-full">
+                  <span class="truncate">${lead.company_name || lead.domain}</span>
+                  <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400 group-hover:text-slate-600 transition shrink-0"></i>
                 </a>
-                <p class="text-[11px] text-slate-500 font-medium mt-0.5">${contactName}</p>
-                <p class="text-xs text-slate-600 mt-1.5 line-clamp-2 leading-relaxed">
+                <p class="text-[11px] text-slate-500 font-medium truncate">${contactName}</p>
+                <p class="text-xs text-slate-600 mt-1 leading-relaxed wrap-safe line-clamp-2">
                   ${lead.business_summary || 'Commercial enterprise.'}
                 </p>
               </div>
             </div>
 
             <!-- Diagnostic Dossier -->
-            <div class="space-y-1.5 text-xs">
-              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 leading-relaxed">
+            <div class="space-y-1.5 text-xs min-w-0">
+              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 min-w-0">
                 <span class="font-mono text-[9px] uppercase tracking-wider text-emerald-800 font-semibold block mb-0.5">✓ Advantage:</span>
-                <span class="text-slate-700 text-[11px]">${lead.where_they_are_good || 'Solid online presence'}</span>
+                <span class="text-slate-700 text-[11px] wrap-safe block leading-relaxed">${lead.where_they_are_good || 'Solid online presence'}</span>
               </div>
 
-              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 leading-relaxed">
+              <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 min-w-0">
                 <span class="font-mono text-[9px] uppercase tracking-wider text-rose-800 font-semibold block mb-0.5">✕ Opportunity:</span>
-                <span class="text-slate-700 text-[11px]">${lead.where_they_are_lacking || lead.opportunity_type || 'Digital bottleneck'}</span>
+                <span class="text-slate-700 text-[11px] wrap-safe block leading-relaxed">${lead.where_they_are_lacking || lead.opportunity_type || 'Digital bottleneck'}</span>
               </div>
             </div>
 
             <!-- Contact Strip & Action -->
-            <div class="space-y-2.5 pt-2 border-t border-slate-100">
-              <div class="flex flex-wrap gap-1.5">
+            <div class="space-y-2.5 pt-2 border-t border-slate-100 min-w-0">
+              <div class="flex flex-wrap gap-1.5 min-w-0">
                 ${contactButtons.join('') || '<span class="text-[11px] text-slate-400 italic font-mono">No direct inboxes captured</span>'}
               </div>
 
@@ -920,7 +1070,7 @@
                   <i class="fa-solid fa-arrow-right text-[10px] text-slate-300"></i>
                 </button>
                 <button onclick="deleteLead(${lead.id})" 
-                        class="btn-tactile p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 transition" 
+                        class="btn-tactile p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 transition shrink-0" 
                         title="Dismiss Lead">
                   <i class="fa-regular fa-trash-can text-xs"></i>
                 </button>
@@ -932,7 +1082,7 @@
       }).join('');
     }
 
-    // Render Table View
+    // Render Table View with Status Toggle & Overlap-Proof Cells
     function renderTable(leads) {
       const tbody = document.getElementById('table-body');
       tbody.innerHTML = leads.map(lead => {
@@ -940,48 +1090,67 @@
         const phones = lead.phones ? lead.phones.split(',').map(p => p.trim()).filter(Boolean) : [];
         const websiteUrl = lead.website && lead.website.startsWith('http') ? lead.website : `https://${lead.domain}`;
         const safeCompany = (lead.company_name || lead.domain).replace(/'/g, "\\'");
+        const isDone = lead.status === 'Contacted' || lead.status === 'Done';
+
+        const statusPill = isDone ? `
+          <button onclick="toggleLeadStatus(${lead.id}, event)" 
+                  class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-medium inline-flex items-center gap-1" 
+                  title="Toggle status">
+            <i class="fa-solid fa-check text-[10px] text-emerald-600"></i> Done
+          </button>
+        ` : `
+          <button onclick="toggleLeadStatus(${lead.id}, event)" 
+                  class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 inline-flex items-center gap-1" 
+                  title="Toggle status">
+            <i class="fa-regular fa-circle text-[9px] text-slate-400"></i> Yet to explore
+          </button>
+        `;
 
         return `
           <tr id="lead-row-${lead.id}" class="hover:bg-slate-50/70 transition group">
-            <td class="py-3 px-4">
-              <a href="${websiteUrl}" target="_blank" rel="noopener noreferrer" 
-                 class="font-medium text-slate-900 hover:underline transition inline-flex items-center gap-1">
-                ${lead.company_name || lead.domain}
-                <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-slate-400"></i>
-              </a>
-              <div class="text-[10px] text-slate-500 font-mono">${lead.domain}</div>
+            <td class="py-3 px-3.5 whitespace-nowrap">
+              ${statusPill}
             </td>
-            <td class="py-3 px-4 font-mono text-[11px] text-slate-700">
+            <td class="py-3 px-3.5 max-w-[180px]">
+              <a href="${websiteUrl}" target="_blank" rel="noopener noreferrer" 
+                 class="font-medium text-slate-900 hover:underline transition inline-flex items-center gap-1 max-w-full">
+                <span class="truncate">${lead.company_name || lead.domain}</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-slate-400 shrink-0"></i>
+              </a>
+              <div class="text-[10px] text-slate-500 font-mono truncate">${lead.domain}</div>
+            </td>
+            <td class="py-3 px-3.5 font-mono text-[11px] text-slate-700 whitespace-nowrap">
               <button onclick="setServiceFilter('${lead.service_match}')" 
                       class="btn-tactile hover:underline text-left text-slate-800" 
                       title="Filter by ${lead.service_match}">
                 ${lead.service_match || 'General Dev'}
               </button>
             </td>
-            <td class="py-3 px-4 max-w-xs text-slate-600 text-xs">
+            <td class="py-3 px-3.5 max-w-[200px] text-slate-600 text-xs wrap-safe leading-normal">
               ${lead.where_they_are_good || '-'}
             </td>
-            <td class="py-3 px-4 max-w-xs text-slate-700 text-xs font-medium">
+            <td class="py-3 px-3.5 max-w-[200px] text-slate-700 text-xs font-medium wrap-safe leading-normal">
               ${lead.where_they_are_lacking || '-'}
             </td>
-            <td class="py-3 px-4 font-mono text-[11px] space-y-1">
+            <td class="py-3 px-3.5 font-mono text-[11px] space-y-1 max-w-[160px]">
               ${emails.length > 0 ? `
                 <button onclick="handleEmailClick(event, '${emails[0]}', '${safeCompany}', ${lead.id})" 
-                        class="btn-tactile text-slate-800 hover:text-slate-900 hover:underline flex items-center gap-1" 
-                        title="Click to copy & email">
-                  <i class="fa-regular fa-envelope text-[9px] text-slate-400"></i> ${emails[0]}
+                        class="btn-tactile text-slate-800 hover:text-slate-900 hover:underline flex items-center gap-1 max-w-full" 
+                        title="Copy & compose in Gmail">
+                  <i class="fa-regular fa-envelope text-[9px] text-slate-400 shrink-0"></i> 
+                  <span class="truncate">${emails[0]}</span>
                 </button>
               ` : ''}
               ${phones.length > 0 ? `
                 <button onclick="handlePhoneClick(event, '${phones[0]}')" 
-                        class="btn-tactile text-slate-600 hover:text-slate-900 hover:underline flex items-center gap-1" 
+                        class="btn-tactile text-slate-600 hover:text-slate-900 hover:underline flex items-center gap-1 truncate max-w-full" 
                         title="Click to copy phone">
-                  <i class="fa-solid fa-phone text-[9px] text-slate-400"></i> ${phones[0]}
+                  <i class="fa-solid fa-phone text-[9px] text-slate-400 shrink-0"></i> ${phones[0]}
                 </button>
               ` : ''}
               ${emails.length === 0 && phones.length === 0 ? '<span class="text-slate-400 italic">None</span>' : ''}
             </td>
-            <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+            <td class="py-3 px-3.5 text-right space-x-1.5 whitespace-nowrap">
               <button onclick="openPitchModal(${lead.id})" 
                       class="btn-tactile px-2.5 py-1 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition shadow-2xs">
                 Proposition
@@ -1018,6 +1187,8 @@
       document.getElementById('modal-service-badge').innerText = lead.service_match || 'Digital Opportunity';
       document.getElementById('modal-country-badge').innerText = lead.country || 'Global';
 
+      updateModalStatusBadge(lead.status);
+
       document.getElementById('modal-contact-name').innerText = lead.contact_name ? `${lead.contact_name}` : `Founding & Leadership Team`;
       document.getElementById('modal-business-summary').innerText = lead.business_summary || 'Commercial enterprise.';
       document.getElementById('modal-where-good').innerText = lead.where_they_are_good || 'Clear market presence.';
@@ -1031,11 +1202,11 @@
       const emails = lead.emails ? lead.emails.split(',').map(e => e.trim()).filter(Boolean) : [];
       if (emails.length > 0) {
         emailsContainer.innerHTML = emails.map(e => `
-          <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200">
-            <span class="text-slate-800 text-xs">${e}</span>
-            <div class="flex items-center gap-1.5">
+          <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 min-w-0">
+            <span class="text-slate-800 text-xs truncate max-w-[200px]">${e}</span>
+            <div class="flex items-center gap-1.5 shrink-0">
               <button onclick="copyToClipboard('${e}', 'Copied email: ${e}')" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200 hover:bg-slate-100 text-slate-700 transition">Copy</button>
-              <a href="mailto:${e}" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-900 text-white hover:bg-slate-800 transition">Compose ↗</a>
+              <button onclick="openGmailWebFromModal()" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-900 text-white hover:bg-slate-800 transition">Compose ↗</button>
             </div>
           </div>
         `).join('');
@@ -1050,9 +1221,9 @@
         phonesContainer.innerHTML = phones.map(p => {
           const digits = p.replace(/\D/g, '');
           return `
-            <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200">
-              <span class="text-slate-800 text-xs">${p}</span>
-              <div class="flex items-center gap-1.5">
+            <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 min-w-0">
+              <span class="text-slate-800 text-xs truncate max-w-[150px]">${p}</span>
+              <div class="flex items-center gap-1.5 shrink-0">
                 <button onclick="copyToClipboard('${p}', 'Copied phone: ${p}')" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200 hover:bg-slate-100 text-slate-700 transition">Copy</button>
                 <a href="tel:${p}" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200 hover:bg-slate-100 text-slate-700 transition">Call</a>
                 ${digits.length >= 10 ? `<button onclick="handleWhatsAppClick(event, '${digits}', ${lead.id})" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-900 text-white hover:bg-slate-800 transition">WhatsApp ↗</button>` : ''}
@@ -1092,6 +1263,7 @@
       copyToClipboard(text, 'Proposition copied to clipboard!');
       const btn = document.getElementById('copy-modal-pitch-btn');
       btn.innerHTML = `<i class="fa-solid fa-check text-xs"></i> <span>Copied</span>`;
+      markLeadAsContacted(activeModalLead.id);
       setTimeout(() => {
         btn.innerHTML = `<i class="fa-regular fa-copy text-xs"></i> <span>Copy Text</span>`;
       }, 2000);
@@ -1107,6 +1279,7 @@
       const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipient)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
       showToast('Opening Gmail compose window...', 'info');
       window.open(gmailUrl, '_blank');
+      markLeadAsContacted(activeModalLead.id);
     }
 
     function filterFromModalService() {
@@ -1138,7 +1311,6 @@
         const res = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
         if (res.ok) {
           showToast('Prospect dismissed from pipeline', 'info');
-          // Smooth fade removal from DOM
           const cardEl = document.getElementById(`lead-card-${id}`);
           if (cardEl) {
             cardEl.style.opacity = '0';
@@ -1158,17 +1330,17 @@
       }
     }
 
-    // Trigger Autonomous Cycle
+    // Trigger Autonomous Cycle (Guaranteed 15 Fresh Targets)
     async function triggerAutonomousCycle() {
       const btn = document.getElementById('sweep-btn');
       btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Harvesting...</span>`;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Harvesting 15 Fresh Leads...</span>`;
 
       try {
         const res = await fetch('/api/autopilot/run-now?batch_size=15', { method: 'POST' });
         const data = await res.json();
         if (res.ok) {
-          showToast('Harvest cycle active — ingesting opportunities...', 'success');
+          showToast('Autonomous cycle active — ingesting 15 fresh businesses...', 'success');
           startLivePolling();
         } else {
           showToast(data.message || "Sweep already in progress.", 'info');
@@ -1250,7 +1422,7 @@
           if (pollInterval) {
             clearInterval(pollInterval);
             pollInterval = null;
-            showToast('Harvest cycle completed!', 'success');
+            showToast('Harvest cycle completed! 15 fresh leads added to top.', 'success');
             loadAllData();
             setTimeout(() => {
               document.getElementById('live-progress-container').classList.add('hidden');

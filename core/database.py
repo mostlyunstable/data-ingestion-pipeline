@@ -49,7 +49,7 @@ def init_db():
         confident_pitch TEXT,
         lead_score TEXT DEFAULT 'HIGH',
         source TEXT,
-        status TEXT DEFAULT 'New',
+        status TEXT DEFAULT 'Yet to Explore',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -71,6 +71,9 @@ def init_db():
             cursor.execute(f"ALTER TABLE leads ADD COLUMN {col} {col_type};")
         except sqlite3.OperationalError:
             pass # Column already exists
+
+    # Migrate any legacy 'New' status to 'Yet to Explore'
+    cursor.execute("UPDATE leads SET status = 'Yet to Explore' WHERE status = 'New' OR status IS NULL OR status = '';")
 
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_leads_domain ON leads(domain);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_leads_country ON leads(country);")
@@ -145,7 +148,7 @@ def save_or_update_lead(lead_data: dict) -> bool:
             lead_data.get("confident_pitch", ""),
             lead_data.get("lead_score", "HIGH"),
             lead_data.get("source", ""),
-            lead_data.get("status", "New")
+            lead_data.get("status", "Yet to Explore")
         ))
     else:
         # Merge new emails & phones with existing, sanitizing both
@@ -249,8 +252,13 @@ def get_leads(search="", country="", has_email=False, has_phone=False, has_linke
         query += " AND ((linkedin_company != '' AND linkedin_company IS NOT NULL) OR (linkedin_profiles != '' AND linkedin_profiles IS NOT NULL))"
 
     if status:
-        query += " AND status = ?"
-        params.append(status)
+        if status.lower() in ("contacted", "done"):
+            query += " AND (status = 'Contacted' OR status = 'Done')"
+        elif status.lower() in ("yet to explore", "new", "pending"):
+            query += " AND (status = 'Yet to Explore' OR status = 'New' OR status IS NULL OR status = '')"
+        else:
+            query += " AND status = ?"
+            params.append(status)
 
     query += " ORDER BY id DESC LIMIT ? OFFSET ?"
     params.extend([limit, offset])
@@ -285,9 +293,17 @@ def get_lead_stats():
         cursor.execute("SELECT COUNT(*) FROM leads WHERE service_match LIKE ?", (f"%{svc}%",))
         service_counts[svc] = cursor.fetchone()[0]
 
+    cursor.execute("SELECT COUNT(*) FROM leads WHERE status = 'Yet to Explore' OR status = 'New' OR status IS NULL")
+    yet_to_explore = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM leads WHERE status = 'Contacted' OR status = 'Done'")
+    contacted = cursor.fetchone()[0]
+
     conn.close()
     return {
         "total_leads": total,
+        "yet_to_explore": yet_to_explore,
+        "contacted": contacted,
         "with_email": with_email,
         "with_phone": with_phone,
         "with_linkedin": with_linkedin,
@@ -311,7 +327,7 @@ def update_lead_status(lead_id: int, status: str):
     conn.close()
 
 def export_to_csv(filepath=None) -> str:
-    """Exports all leads to a clean CSV ready for outreach or spreadsheet import."""
+    """Exports all leads to a clean, professionally formatted CSV ready for CRM and spreadsheet import."""
     if not filepath:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filepath = os.path.join(EXPORTS_DIR, f"leads_export_{timestamp}.csv")
@@ -320,18 +336,59 @@ def export_to_csv(filepath=None) -> str:
     cursor = conn.cursor()
     cursor.execute("""
     SELECT 
-        company_name, contact_name, domain, website, service_match, opportunity_type,
-        business_summary, where_they_are_good, where_they_are_lacking, confident_pitch,
-        emails, phones, linkedin_company, linkedin_profiles, twitter, instagram,
-        country, city, industry_niche, tech_stack, lead_score,
-        audit_notes, source, status, created_at
+        status,
+        company_name,
+        contact_name,
+        website,
+        domain,
+        service_match,
+        opportunity_type,
+        emails,
+        phones,
+        country,
+        city,
+        where_they_are_good,
+        where_they_are_lacking,
+        confident_pitch,
+        linkedin_company,
+        linkedin_profiles,
+        twitter,
+        instagram,
+        github,
+        tech_stack,
+        lead_score,
+        created_at
     FROM leads ORDER BY id DESC
     """)
     rows = cursor.fetchall()
-    headers = [d[0] for d in cursor.description]
 
-    with open(filepath, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
+    headers = [
+        "Status",
+        "Company Name",
+        "Decision Maker / Contact",
+        "Website URL",
+        "Domain",
+        "Target Service",
+        "Specific Bottleneck / Opportunity",
+        "Verified Email(s)",
+        "Direct Phone(s)",
+        "Country / Territory",
+        "City",
+        "Company Strengths (Praise)",
+        "Identified Flaw / Technical Gap",
+        "Ready-to-Send Cold Outreach Pitch",
+        "LinkedIn Company Page",
+        "LinkedIn Profiles",
+        "Twitter",
+        "Instagram",
+        "GitHub",
+        "Detected Tech Stack",
+        "Lead Quality Score",
+        "Date Harvested"
+    ]
+
+    with open(filepath, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
         writer.writerow(headers)
         for r in rows:
             writer.writerow(list(r))

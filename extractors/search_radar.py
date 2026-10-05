@@ -1,31 +1,61 @@
 """
-Search Radar: Business & Client Discovery
-Finds real business websites based on Niche (e.g. Web Agency, E-commerce, SaaS)
-and Location (e.g. Mumbai, Bangalore, New York, London).
-Uses resilient search extraction to discover target domains without captchas.
+Search Radar: Real Business & Client Discovery
+Discovers live, operational businesses across:
+- Organic Search Engine extraction (Bing with base64 redirect decoding)
+- GitHub Tech Organization directories
+- High-intent query rotators across Indian & Global commercial hubs.
 """
 import random
 import re
+import base64
 import urllib.parse
 import requests
 from bs4 import BeautifulSoup
 from config import USER_AGENTS, MAX_SEARCH_RESULTS
 
 SKIP_DOMAINS = {
-    "google.com", "google.co.in", "bing.com", "duckduckgo.com", "yahoo.com",
-    "wikipedia.org", "youtube.com", "facebook.com", "twitter.com", "x.com",
-    "instagram.com", "reddit.com", "quora.com", "pinterest.com", "medium.com",
-    "glassdoor.com", "indeed.com", "naukri.com", "linkedin.com", "github.com",
-    "yelp.com", "yellowpages.com", "apple.com", "news.ycombinator.com", "ycombinator.com",
-    "producthunt.com", "substack.com", "notion.site", "figma.com", "tiktok.com",
-    "vimeo.com", "slack.com", "discord.com", "discord.gg",
+    # Search engines & Tech giants
+    "google.com", "google.co.in", "bing.com", "duckduckgo.com", "yahoo.com", "msn.com", "live.com",
+    "microsoft.com", "apple.com", "amazon.com", "ebay.com", "etsy.com", "wikipedia.org",
+    
+    # Social media & video
+    "facebook.com", "twitter.com", "x.com", "instagram.com", "linkedin.com", "reddit.com",
+    "quora.com", "pinterest.com", "youtube.com", "tiktok.com", "vimeo.com", "discord.com", "discord.gg",
+    "slack.com", "medium.com", "substack.com", "figma.com", "notion.site", "github.com", "gitlab.com", "bitbucket.org",
+
+    # Aggregators & Directories (we want direct business sites, not listings)
+    "yelp.com", "yellowpages.com", "indiamart.com", "tradeindia.com", "tradewheel.com",
+    "justdial.com", "clutch.co", "g2.com", "capterra.com", "trustpilot.com", "trustradius.com",
+    "upwork.com", "fiverr.com", "freelancer.com", "toptal.com", "indeed.com", "glassdoor.com", "naukri.com",
+    "investopedia.com", "coursera.org", "udemy.com", "forbes.com", "techcrunch.com", "crunchbase.com",
+    "gov.in", "nic.in", "reliancedigital.in", "flipkart.com",
+
+    # Platform hubs
+    "news.ycombinator.com", "ycombinator.com", "producthunt.com",
     "shopify.com", "wordpress.com", "wordpress.org", "wix.com", "squarespace.com",
     "webflow.com", "hubspot.com", "salesforce.com", "mailchimp.com", "klaviyo.com",
-    "omnisend.com", "stripe.com", "paypal.com", "amazon.com", "ebay.com", "etsy.com"
+    "stripe.com", "paypal.com"
 }
 
+def decode_bing_u(u_val: str) -> str:
+    """Decodes Bing click tracking base64 parameter &u=a1<base64>&ntb=1."""
+    if not u_val:
+        return ""
+    try:
+        if u_val.startswith("a1"):
+            b64 = u_val[2:]
+            padding = len(b64) % 4
+            if padding:
+                b64 += "=" * (4 - padding)
+            return base64.b64decode(b64).decode("utf-8", errors="ignore")
+    except Exception:
+        pass
+    return ""
+
 def clean_target_domain(url: str) -> str:
-    """Extracts clean domain from search result link."""
+    """Extracts clean, non-directory business domain from any URL."""
+    if not url:
+        return ""
     try:
         # Check if DuckDuckGo redirect link /l/?uddg=URL
         if "duckduckgo.com/l/?" in url:
@@ -33,24 +63,76 @@ def clean_target_domain(url: str) -> str:
             if "uddg" in parsed_q:
                 url = parsed_q["uddg"][0]
 
+        # Check if Bing tracking redirect link
+        if "bing.com/ck/a" in url:
+            parsed_q = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+            if "u" in parsed_q:
+                decoded = decode_bing_u(parsed_q["u"][0])
+                if decoded:
+                    url = decoded
+
         parsed = urllib.parse.urlparse(url)
         domain = parsed.netloc.lower()
         if domain.startswith("www."):
             domain = domain[4:]
 
+        if not domain or len(domain) < 4 or "." not in domain:
+            return ""
+
         if any(skip in domain for skip in SKIP_DOMAINS):
             return ""
 
-        # Ignore non-top-level extensions
-        if not "." in domain or len(domain) < 4:
+        # Filter out government & educational portals
+        if domain.endswith(".gov") or domain.endswith(".edu") or domain.endswith(".mil"):
             return ""
 
         return domain
     except Exception:
         return ""
 
+def search_bing_lite(query: str, max_results: int = MAX_SEARCH_RESULTS) -> list:
+    """Organic web search using Bing with base64 redirect decoding."""
+    headers = {
+        "User-Agent": random.choice(USER_AGENTS),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"
+    }
+
+    encoded_q = urllib.parse.quote_plus(query)
+    url = f"https://www.bing.com/search?q={encoded_q}&count=40"
+    discovered = []
+    seen = set()
+
+    try:
+        resp = requests.get(url, headers=headers, timeout=9)
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, "html.parser")
+            for li in soup.find_all("li", class_="b_algo"):
+                for a in li.find_all("a", href=True):
+                    raw_href = a["href"]
+                    real_href = raw_href
+                    if "bing.com/ck/a" in raw_href:
+                        parsed = urllib.parse.parse_qs(urllib.parse.urlparse(raw_href).query)
+                        if "u" in parsed:
+                            decoded = decode_bing_u(parsed["u"][0])
+                            if decoded:
+                                real_href = decoded
+
+                    domain = clean_target_domain(real_href)
+                    if domain and domain not in seen:
+                        seen.add(domain)
+                        discovered.append(f"https://{domain}")
+                        if len(discovered) >= max_results:
+                            break
+                if len(discovered) >= max_results:
+                    break
+    except Exception as e:
+        print(f"[SearchRadar] Bing search error: {e}")
+
+    return discovered
+
 def search_duckduckgo_lite(query: str, max_results: int = MAX_SEARCH_RESULTS) -> list:
-    """Queries DuckDuckGo HTML endpoint with stealth headers."""
+    """DuckDuckGo query fallback."""
     headers = {
         "User-Agent": random.choice(USER_AGENTS),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -64,15 +146,10 @@ def search_duckduckgo_lite(query: str, max_results: int = MAX_SEARCH_RESULTS) ->
 
     try:
         data = {"q": query, "b": ""}
-        resp = requests.post(url, data=data, headers=headers, timeout=10)
-
+        resp = requests.post(url, data=data, headers=headers, timeout=8)
         if resp.status_code == 200:
             soup = BeautifulSoup(resp.text, "html.parser")
-            # Result links
-            links = soup.find_all("a", class_="result__url") or soup.find_all("a", class_="result__snippet")
-            if not links:
-                links = soup.find_all("a", href=True)
-
+            links = soup.find_all("a", class_="result__url") or soup.find_all("a", class_="result__snippet") or soup.find_all("a", href=True)
             for a in links:
                 raw_href = a.get("href", "")
                 domain = clean_target_domain(raw_href)
@@ -81,58 +158,85 @@ def search_duckduckgo_lite(query: str, max_results: int = MAX_SEARCH_RESULTS) ->
                     discovered_domains.append(f"https://{domain}")
                     if len(discovered_domains) >= max_results:
                         break
-    except Exception as e:
-        print(f"[SearchRadar] DuckDuckGo search error: {e}")
+    except Exception:
+        pass
 
     return discovered_domains
 
-def search_bing_lite(query: str, max_results: int = MAX_SEARCH_RESULTS) -> list:
-    """Fallback search using Bing standard HTML search."""
-    headers = {
-        "User-Agent": random.choice(USER_AGENTS),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9"
-    }
+def discover_github_tech_companies(location: str = "Bangalore", keyword: str = "", limit: int = 15) -> list:
+    """
+    High-fidelity discovery of real businesses and digital agencies via GitHub Organizations.
+    Pulls verified business URLs with zero scraping friction.
+    """
+    headers = {"User-Agent": "OmniLead-Scanner/1.0"}
+    query_parts = ["type:org"]
+    if location:
+        query_parts.append(f"location:{location}")
+    if keyword:
+        query_parts.append(keyword)
 
-    encoded_q = urllib.parse.quote_plus(query)
-    url = f"https://www.bing.com/search?q={encoded_q}&count=50"
+    q = " ".join(query_parts)
+    url = f"https://api.github.com/search/users?q={urllib.parse.quote(q)}&per_page={min(limit, 25)}"
     discovered = []
     seen = set()
 
     try:
-        resp = requests.get(url, headers=headers, timeout=10)
+        resp = requests.get(url, headers=headers, timeout=8)
         if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            # Bing result headings
-            for li in soup.find_all("li", class_="b_algo"):
-                h2 = li.find("h2")
-                if h2:
-                    a = h2.find("a", href=True)
-                    if a:
-                        domain = clean_target_domain(a["href"])
-                        if domain and domain not in seen:
-                            seen.add(domain)
-                            discovered.append(f"https://{domain}")
-                            if len(discovered) >= max_results:
-                                break
+            items = resp.json().get("items", [])
+            for item in items:
+                login = item.get("login")
+                if not login:
+                    continue
+                try:
+                    org_resp = requests.get(f"https://api.github.com/orgs/{login}", headers=headers, timeout=4)
+                    if org_resp.status_code == 200:
+                        blog = org_resp.json().get("blog", "")
+                        if blog:
+                            domain = clean_target_domain(blog)
+                            if domain and domain not in seen:
+                                seen.add(domain)
+                                discovered.append(f"https://{domain}")
+                                if len(discovered) >= limit:
+                                    break
+                except Exception:
+                    continue
     except Exception as e:
-        print(f"[SearchRadar] Bing search error: {e}")
+        print(f"[SearchRadar] GitHub org discovery error: {e}")
 
     return discovered
 
 def hunt_businesses(niche: str, location: str, limit: int = 25) -> list:
     """
-    Combines search queries to locate business domains.
-    Example: 'web design agency', 'Bangalore' -> 'web design agency in Bangalore'
+    Combines multi-engine search queries to locate real target domains.
+    Rotates queries across Bing, GitHub Org directories, and DuckDuckGo.
     """
     niche = niche.strip()
     location = location.strip()
 
+    results = []
+    seen = set()
+
+    # 1. First probe GitHub Organizations for tech/agency niches
+    if any(k in niche.lower() for k in ["tech", "software", "agency", "saas", "app", "dev", "ai"]):
+        loc = location or random.choice(["Bangalore", "Mumbai", "San Francisco", "London", "Austin"])
+        kw = random.choice(["agency", "tech", "software", "solutions", "labs", "studio"])
+        gh_results = discover_github_tech_companies(location=loc, keyword=kw, limit=min(limit, 10))
+        for u in gh_results:
+            d = clean_target_domain(u)
+            if d and d not in seen:
+                seen.add(d)
+                results.append(u)
+
+    if len(results) >= limit:
+        return results[:limit]
+
+    # 2. Organic Web Search Queries
     if location:
         queries = [
-            f'"{niche}" "{location}"',
-            f"{niche} companies in {location}",
-            f"best {niche} in {location}"
+            f'"{niche}" in {location} official website',
+            f"{niche} companies {location}",
+            f"top {niche} in {location}"
         ]
     else:
         queries = [
@@ -140,15 +244,10 @@ def hunt_businesses(niche: str, location: str, limit: int = 25) -> list:
             f"top {niche} agencies"
         ]
 
-    results = []
-    seen = set()
-
     for q in queries:
-        # Try DuckDuckGo first
-        found = search_duckduckgo_lite(q, max_results=limit)
-        # If DDG blocked or sparse, fallback to Bing
-        if len(found) < 5:
-            found.extend(search_bing_lite(q, max_results=limit))
+        found = search_bing_lite(q, max_results=limit)
+        if len(found) < 4:
+            found.extend(search_duckduckgo_lite(q, max_results=limit))
 
         for url in found:
             clean_dom = clean_target_domain(url)
@@ -160,4 +259,4 @@ def hunt_businesses(niche: str, location: str, limit: int = 25) -> list:
         if len(results) >= limit:
             break
 
-    return results
+    return results[:limit]
