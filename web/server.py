@@ -33,7 +33,9 @@ app.add_middleware(
 def startup_event():
     init_db()
     run_self_healing_cycle()
-    autopilot_daemon.start(interval_minutes=30)
+    import os
+    if not os.environ.get("VERCEL"):
+        autopilot_daemon.start(interval_minutes=30)
 
 @app.post("/api/self-heal")
 async def api_trigger_self_heal():

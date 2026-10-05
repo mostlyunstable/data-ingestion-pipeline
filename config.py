@@ -5,12 +5,27 @@ Controls rotation, timeouts, page discovery targets, and noise filtering.
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-EXPORTS_DIR = os.path.join(BASE_DIR, "exports")
-DB_PATH = os.path.join(DATA_DIR, "leads.db")
 
-os.makedirs(DATA_DIR, exist_ok=True)
-os.makedirs(EXPORTS_DIR, exist_ok=True)
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+if IS_VERCEL:
+    DATA_DIR = "/tmp/data"
+    EXPORTS_DIR = "/tmp/exports"
+    os.makedirs(DATA_DIR, exist_ok=True)
+    os.makedirs(EXPORTS_DIR, exist_ok=True)
+    DB_PATH = os.path.join(DATA_DIR, "leads.db")
+    repo_db = os.path.join(BASE_DIR, "data", "leads.db")
+    if os.path.exists(repo_db) and not os.path.exists(DB_PATH):
+        try:
+            import shutil
+            shutil.copy2(repo_db, DB_PATH)
+        except Exception:
+            pass
+else:
+    DATA_DIR = os.path.join(BASE_DIR, "data")
+    EXPORTS_DIR = os.path.join(BASE_DIR, "exports")
+    os.makedirs(DATA_DIR, exist_ok=True)
+    os.makedirs(EXPORTS_DIR, exist_ok=True)
+    DB_PATH = os.path.join(DATA_DIR, "leads.db")
 
 # Common contact subpages to crawl on any company website
 CONTACT_SUBPAGES = [
