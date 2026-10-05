@@ -13,135 +13,74 @@ from config import USER_AGENTS
 from extractors.search_radar import hunt_businesses, clean_target_domain
 from core.database import get_db
 
-# Rotational target corridors designed for maximum buying intent across India & Global markets
+# Rotational target corridors specifically engineered for HIGH-TICKET, CALL-BOOKABLE CLIENTS
+# (Boutique clinics, agencies, law firms, real estate, and Shopify brands that actively buy agency dev & bots)
 ROTATIONAL_BUYER_MATRICES = [
-    # Corridor 1: E-commerce & D2C Brands (Need Chatbots, Mobile Apps, Inventory Pipelines)
-    {"niche": "Shopify D2C apparel brands", "locations": ["United States", "India", "United Kingdom"]},
-    {"niche": "Luxury wellness brands Shopify", "locations": ["California", "London", "Mumbai"]},
-    {"niche": "Fast growing D2C brands", "locations": ["Bangalore", "Austin", "New York"]},
-    {"niche": "D2C skincare cosmetics brand", "locations": ["Mumbai", "London", "Los Angeles"]},
-    {"niche": "Specialty coffee roasters ecommerce", "locations": ["Bangalore", "Melbourne", "San Francisco"]},
-    {"niche": "Direct to consumer footwear brand", "locations": ["United States", "India", "Europe"]},
+    # Corridor 1: Private Clinics (Dermatology, Dental, Aesthetics - Need 24/7 WhatsApp AI Booking Bots)
+    {"niche": "Cosmetic dental clinic", "locations": ["Indiranagar Bangalore", "South Delhi", "Bandra Mumbai"]},
+    {"niche": "Dermatology aesthetics clinic", "locations": ["Koramangala Bangalore", "Delhi NCR", "Juhu Mumbai"]},
+    {"niche": "Hair restoration transplant clinic", "locations": ["Mumbai", "Bangalore", "London"]},
+    {"niche": "Private dental practice", "locations": ["Central London", "Manchester", "Dubai"]},
+    {"niche": "Cosmetic surgery wellness clinic", "locations": ["Dubai Marina", "London", "South Delhi"]},
 
-    # Corridor 2: Funded Startups & Tech Companies (Need Custom Pipelines, MVPs, App Dev)
-    {"niche": "B2B SaaS startups", "locations": ["San Francisco", "Bangalore", "London"]},
-    {"niche": "AI tech startups", "locations": ["Austin", "Delhi NCR", "New York"]},
-    {"niche": "FinTech startups platform", "locations": ["London", "Mumbai", "Toronto"]},
-    {"niche": "DevOps developer tools software", "locations": ["San Francisco", "Bangalore", "Berlin"]},
-    {"niche": "HR tech employee onboarding software", "locations": ["New York", "London", "Bangalore"]},
-    {"niche": "EdTech online certification platform", "locations": ["Mumbai", "Austin", "London"]},
+    # Corridor 2: Boutique Real Estate & Architecture (High Commissions, Need Fast Landing Pages & WhatsApp Qualification)
+    {"niche": "Boutique real estate agency", "locations": ["Dubai Downtown", "South Kensington London", "Goa"]},
+    {"niche": "Luxury property consultant", "locations": ["Mayfair London", "Palm Jumeirah Dubai", "Mumbai"]},
+    {"niche": "High end interior design studio", "locations": ["South Delhi", "Bandra Mumbai", "Bangalore"]},
+    {"niche": "Boutique architecture design studio", "locations": ["London", "Bangalore", "Dubai"]},
+    {"niche": "Commercial real estate advisory", "locations": ["Bangalore", "Delhi NCR", "London"]},
 
-    # Corridor 3: High-Volume Service Agencies (Need Lead Automation, Chatbots, Web Revamps)
-    {"niche": "Digital performance marketing agency", "locations": ["Bangalore", "Chicago", "London"]},
-    {"niche": "Real estate marketing agency", "locations": ["Dubai", "Florida", "Mumbai"]},
-    {"niche": "Healthcare technology solutions", "locations": ["United States", "India", "United Kingdom"]},
-    {"niche": "Branding creative design studio", "locations": ["New York", "London", "Mumbai"]},
-    {"niche": "Corporate legal advisory firm", "locations": ["London", "Delhi NCR", "Singapore"]},
-    {"niche": "B2B sales consulting agency", "locations": ["Chicago", "Bangalore", "Austin"]},
+    # Corridor 3: Legal, Visa & Immigration Consultancies (High Retainers, Need 24/7 AI Client Intake Bots)
+    {"niche": "Immigration visa consultancy", "locations": ["London", "Connaught Place Delhi", "Bangalore"]},
+    {"niche": "Boutique corporate law firm", "locations": ["Bangalore", "Central London", "Mumbai"]},
+    {"niche": "Tax advisory consultancy", "locations": ["London", "Delhi NCR", "Dubai"]},
+    {"niche": "Study abroad education consultant", "locations": ["Bangalore", "Mumbai", "Hyderabad"]},
 
-    # Corridor 4: Logistics & Operations Heavy Platforms (Need Custom Pipelines & Automation)
-    {"niche": "Logistics supply chain platform", "locations": ["India", "United States", "Singapore"]},
-    {"niche": "Recruitment staffing tech platform", "locations": ["United Kingdom", "United States", "Bangalore"]},
-    {"niche": "Warehouse inventory management tech", "locations": ["Dallas", "Mumbai", "Chicago"]},
-    {"niche": "Commercial facility management services", "locations": ["London", "Bangalore", "Atlanta"]},
-    {"niche": "Last mile delivery logistics", "locations": ["Delhi NCR", "London", "Los Angeles"]}
+    # Corridor 4: Independent D2C Brands & Shopify Boutiques (Need Abandoned Cart Bots, Mobile Apps & Web Speed)
+    {"niche": "Artisan jewelry boutique Shopify", "locations": ["Jaipur", "London", "Mumbai"]},
+    {"niche": "Specialty coffee roastery ecommerce", "locations": ["Bangalore", "Melbourne", "London"]},
+    {"niche": "Handcrafted leather goods Shopify", "locations": ["Bangalore", "Florence", "Mumbai"]},
+    {"niche": "Organic luxury skincare brand", "locations": ["Mumbai", "London", "California"]},
+    {"niche": "Boutique designer apparel brand", "locations": ["Delhi NCR", "London", "Bangalore"]},
+
+    # Corridor 5: Boutique B2B Agencies & Recruitment Firms (Need Lead Routing Automation & Web Revamps)
+    {"niche": "Boutique performance marketing agency", "locations": ["Bangalore", "Austin", "London"]},
+    {"niche": "Executive search recruitment firm", "locations": ["London", "Bangalore", "Dubai"]},
+    {"niche": "Creative digital branding studio", "locations": ["Soho London", "Bandra Mumbai", "New York"]},
+    {"niche": "B2B sales consulting boutique", "locations": ["Austin", "Bangalore", "Chicago"]}
 ]
 
-# Curated reservoir of verified high-growth companies across the 5 niches to guarantee endless supply
+# Curated reservoir of verified, reachable, responsive boutique SMBs, clinics, consultancies, and independent brands
+# (1 to 50 employees where decision makers directly monitor inboxes and buy agency services)
 VERIFIED_TARGET_SEED_CORPUS = [
-    # Custom Pipelines & Data Tech
-    "https://questdb.io", "https://timescale.com", "https://airbyte.com",
-    "https://meltano.com", "https://dagster.io", "https://prefect.io",
-    "https://clickhouse.com", "https://starburst.io", "https://dremio.com",
-    "https://cube.dev", "https://rilldata.com", "https://evidence.dev",
-    "https://tinybird.co", "https://rudderstack.com", "https://jitsu.com",
-    "https://conduit.io", "https://estuary.dev", "https://decodable.co",
+    # Boutique Healthcare & High-Ticket Aesthetics Clinics (Need WhatsApp AI Booking & Site Revamps)
+    "https://kosmoderma.com", "https://olivaclinic.com", "https://richfeel.com",
+    "https://theestheticclinic.com", "https://drchhabra.com", "https://dentistinbangalore.com",
+    "https://smiledentalcare.co.uk", "https://harleystreetaesthetics.com", "https://skindoctorindia.com",
     
-    # Chatbots & Conversational Lead Capture Candidates
-    "https://cal.com", "https://dub.co", "https://typebot.io",
-    "https://formbricks.com", "https://tally.so", "https://fillout.com",
-    "https://paperform.co", "https://feathery.io", "https://reform.app",
-    "https://jotform.com", "https://survicate.com", "https://userpilot.com",
-    "https://chameleon.io", "https://appcues.com", "https://pendo.io",
-    "https://posthog.com", "https://june.so", "https://mixpanel.com",
+    # Boutique Legal, Immigration & Professional Consultancies (Need AI Intake & Web Modernization)
+    "https://visasavenue.com", "https://lexorbis.com", "https://singhania.in",
+    "https://anmglobal.com", "https://edugoabroad.com", "https://nationwidevisas.com",
+    "https://y-axis.com", "https://transglobaloverseas.com",
 
-    # Web & App Development Candidates
-    "https://raycast.com", "https://warp.dev", "https://superhuman.com",
-    "https://cron.com", "https://linear.app", "https://height.app",
-    "https://kitemaker.co", "https://plane.so", "https://gitkraken.com",
-    "https://fork.dev", "https://tower.com", "https://tableplus.com",
-    "https://dbgate.org", "https://beekeeperstudio.io", "https://insomnia.rest",
-    "https://hoppscotch.io", "https://bruno.usebruno.com", "https://yaak.app",
+    # Boutique Architecture & Luxury Interior Studios (Need High-Speed Portfolio Web Dev)
+    "https://zenithrealty.in", "https://fincorpestate.com", "https://studioarch.in",
+    "https://faisalinteriors.com", "https://theinteriorlab.com.sg", "https://morphogenesis.org",
+    "https://chalkstudio.design", "https://atelierassociates.in",
 
-    # Indian Tech & Agency Pioneers
-    "https://zerodha.tech", "https://razorpay.com", "https://juspay.in",
-    "https://hasura.io", "https://devfolio.co", "https://dhiwise.com",
-    "https://appsmith.com", "https://tooljet.com", "https://locofy.ai",
-    "https://questlabs.ai", "https://growthx.club", "https://stoa.club",
-    "https://nextleap.app", "https://scaler.com", "https://almabetter.com",
-    "https://masaischool.com", "https://geekster.in", "https://kraftshala.com",
-    "https://bluestone.com", "https://caratlane.com", "https://voylla.com",
-    "https://melorra.com", "https://giva.co", "https://palmonas.com",
-    "https://snitch.co.in", "https://beyoung.in", "https://thesouledstore.com",
-    "https://bewakoof.com", "https://veirdo.in", "https://bonkerscorner.com",
-    "https://marchtee.com", "https://damensch.com", "https://xyxxcrew.com",
-    "https://bareanatomy.in", "https://dotandkey.com", "https://plumgoodness.com",
-    "https://mcaffeine.com", "https://wowskinscience.com", "https://mamaearth.in",
-    "https://sugarcosmetics.com", "https://myglamm.com", "https://renee.in",
-    "https://swissbeauty.in", "https://kaybeauty.com", "https://colorbarcosmetics.com",
-    "https://wakefit.co", "https://sleepycat.in", "https://sundayrest.com",
-    "https://thesleepcompany.in", "https://floomattress.com", "https://peppfry.com",
+    # Boutique Digital Agencies & Studios (Need Pipelines, Automation & Partner Dev)
+    "https://firstlaunch.in", "https://brightads.in", "https://spintadigital.com",
+    "https://brandvm.com", "https://parallelhq.com", "https://ramotion.com",
+    "https://foxy-moron.com", "https://socialbeat.in", "https://whiteriversmedia.com",
 
-    # International D2C & High Growth Platforms
-    "https://allbirds.com", "https://warbyparker.com", "https://casper.com",
-    "https://awaytravel.com", "https://glossier.com", "https://curology.com",
-    "https://hims.com", "https://hers.com", "https://ritual.com",
-    "https://magicspoon.com", "https://liquiddeath.com", "https://olipop.com",
-    "https://poppi.com", "https://athleticgreens.com", "https://mudwtr.com",
-    "https://drinksupercoffee.com", "https://dailyharvest.com", "https://sakara.com",
-    "https://hellofresh.com", "https://blueapron.com", "https://butcherbox.com",
-    "https://trubrain.com", "https://four-sigmatic.com", "https://kosas.com",
-    "https://iliabeauty.com", "https://tower28beauty.com", "https://meritbeauty.com",
-    "https://saiehello.com", "https://rarebeauty.com", "https://fentybeauty.com",
-    "https://rhode.com", "https://ouai.com", "https://gisou.com",
-
-    # Automation, Workflow & Modern Integration Pioneers
-    "https://make.com", "https://activepieces.com", "https://n8n.io",
-    "https://relay.app", "https://gumloop.com", "https://paragon.com",
-    "https://alloyautomation.com", "https://bardeen.ai", "https://axiom.ai",
-    "https://harpa.ai", "https://browse.ai", "https://simplescraper.io",
-    "https://buildship.com", "https://fastgen.com",
-
-    # Mobile App Dev & Low-Code Platform Pioneers
-    "https://expo.dev", "https://tamagui.dev", "https://flutterflow.io",
-    "https://draftbit.com", "https://glideapps.com", "https://bravostudio.app",
-    "https://bubble.io", "https://softr.io", "https://adalo.com",
-
-    # Indian D2C Powerhouses & High Growth Brands
-    "https://boat-lifestyle.com", "https://noise.com", "https://fireboltt.com",
-    "https://boultaudio.com", "https://portronics.com", "https://headsupfortails.com",
-    "https://supertails.com", "https://countrydelight.in", "https://epigamia.com",
-    "https://slurpfarm.com", "https://trueelements.com", "https://yogabar.in",
-    "https://chaayos.com", "https://bluetokaicoffee.com", "https://sleepyowl.co",
-    "https://thirdwavecoffeeroasters.com", "https://ragecoffee.com", "https://suta.in",
-    "https://chumbak.com", "https://dailyobjects.com", "https://mokobara.com",
-    "https://uppercase.in", "https://zouk.co.in", "https://bunaai.com",
-
-    # Global High Growth D2C & Apparel Innovators
-    "https://gymshark.com", "https://nobullproject.com", "https://vuoriclothing.com",
-    "https://aloyoga.com", "https://tentree.com", "https://kotn.com",
-    "https://brooklinen.com", "https://parachutehome.com", "https://cozyearth.com",
-    "https://bollandbranch.com", "https://meundies.com", "https://tommyjohn.com",
-    "https://mackweldon.com", "https://rothys.com", "https://birdies.com",
-    "https://thursdayboots.com", "https://koio.co", "https://greats.com",
-    "https://cuyana.com", "https://senreve.com", "https://dagnedover.com",
-    "https://monos.com", "https://july.com",
-
-    # Cold Outreach, Ingestion & Sales Tech Tools
-    "https://clay.com", "https://instantly.ai", "https://smartlead.ai",
-    "https://lemlist.com", "https://reply.io", "https://woodpecker.co",
-    "https://saleshandy.com", "https://quickmail.io", "https://mailshake.com",
-    "https://klenty.com", "https://hightouch.com", "https://census.com"
+    # Independent D2C Brands & Shopify Merchants (Need WhatsApp Bot, Mobile App & Speed)
+    "https://marchtee.com", "https://damensch.com", "https://bareanatomy.in",
+    "https://dotandkey.com", "https://bluetokaicoffee.com", "https://sleepyowl.co",
+    "https://suta.in", "https://zouk.co.in", "https://mokobara.com",
+    "https://palmonas.com", "https://snitch.co.in", "https://thesouledstore.com",
+    "https://xyxxcrew.com", "https://plumgoodness.com", "https://mcaffeine.com",
+    "https://renee.in", "https://swissbeauty.in", "https://kaybeauty.com",
+    "https://wakefit.co", "https://sleepycat.in", "https://thesleepcompany.in"
 ]
 
 def fetch_rss_startup_launches() -> list:

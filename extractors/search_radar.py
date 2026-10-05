@@ -114,8 +114,33 @@ def clean_target_domain(url: str) -> str:
             "indgovtjobs", "sarkari", "ndtv.com", "moneycontrol.com", "livemint.com",
             "firstpost.com", "zeenews.com", "abplive.com", "aajtak.in", "thehindu.com",
             "deccanchronicle.com", "akhiljobs.com", "eapply.in", "adda247.com",
-            "hdfcbank.com", "icicibank.com", "sbi.co.in"
+            "hdfcbank.com", "icicibank.com", "sbi.co.in", "tipsnetbd.com", "myasta.avadhutsathe.in"
         ]):
+            return ""
+
+        # Filter out massive enterprises, unicorns, government bodies, rail & hospital conglomerates
+        # (These have internal engineering teams/RFPs and are impossible for agencies to book calls with)
+        if any(ent in domain for ent in [
+            "samsung.com", "apple.com", "google.com", "microsoft.com", "amazon.com", "plaid.com", "wise.com",
+            "myntra.com", "tatacliq.com", "tata.com", "tatamotors.com", "reliance.com", "jio.com", "airtel.in",
+            "irctc.com", "irctctourism.com", "ixigo.com", "maxhealthcare.in", "aakashhealthcare.com",
+            "geeksforgeeks.org", "deepai.org", "directi.com", "speedtest.net", "flipkart.com", "zomato.com",
+            "swiggy.com", "makemytrip.com", "yatra.com", "cleartrip.com", "ola.in", "uber.com", "paytm.com",
+            "phonepe.com", "cred.club", "byjus.com", "unacademy.com", "vedantu.com", "deloitte.com", "mckinsey.com",
+            "pwc.com", "ey.com", "kpmg.com", "accenture.com", "tcs.com", "infosys.com", "wipro.com", "cognizant.com",
+            "hcltech.com", "mpmetrorail.com", "confirmtkt.com", "railyatri.in", "shadowfax.in", "dtdc.com",
+            "linear.app", "superhuman.com", "raycast.com", "warp.dev", "clickhouse.com", "questdb.io",
+            "timescale.com", "airbyte.com", "meltano.com", "dagster.io", "prefect.io", "gymshark.com",
+            "allbirds.com", "warbyparker.com", "glossier.com", "hims.com", "nykaa.com", "purplle.com",
+            "ajio.com", "only.in", "wforwoman.com", "thecollective.in", "luxepolis.com", "luxuryescapes.com",
+            "toprankers.com", "tophat.com", "feedough.com", "edtechhub.org", "nirankarihealthcity.org",
+            "projectreal.gg", "ama.org", "zohorecruit.in", "mpcareer.in", "govtjobguru.in", "plutuseducation.com",
+            "digitalregenesys.com"
+        ]):
+            return ""
+
+        # Filter out institutional, railway, bank, and metro keywords
+        if any(k in domain for k in ["metrorail", "railway", "bank.", ".bank", "zohorecruit"]):
             return ""
 
         base = domain.rsplit('.', 1)[0]

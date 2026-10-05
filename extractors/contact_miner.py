@@ -109,7 +109,8 @@ def clean_email(email: str, company_domain: str = "") -> str:
         "sentry.io", "ingest", "wixpress.com", "gravatar.com", "schema.org",
         "cloudflare.com", "example.com", "example.org", "dummy.com", "test.com",
         "domain.com", "yourdomain.com", "mycompany.com", "github.com", "kimchang.com",
-        "google.com", "apple.com", "microsoft.com", "wikimedia.org", "work-email.com"
+        "google.com", "apple.com", "microsoft.com", "wikimedia.org", "work-email.com",
+        "godaddy.com", "hostgator.com", "bluehost.com", "namecheap.com"
     ]):
         return ""
 
