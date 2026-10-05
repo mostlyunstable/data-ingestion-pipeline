@@ -107,6 +107,22 @@ def clean_target_domain(url: str) -> str:
         ]):
             return ""
 
+        # Filter out news publishers, job aggregators, and banking portals
+        if any(m in domain for m in [
+            "news18.com", "hindustantimes.com", "siasat.com", "how2shout.com",
+            "directv.com", "icicidirect.com", "natelangana.com", "kollegeapply.com",
+            "indgovtjobs", "sarkari", "ndtv.com", "moneycontrol.com", "livemint.com",
+            "firstpost.com", "zeenews.com", "abplive.com", "aajtak.in", "thehindu.com",
+            "deccanchronicle.com", "akhiljobs.com", "eapply.in", "adda247.com",
+            "hdfcbank.com", "icicibank.com", "sbi.co.in"
+        ]):
+            return ""
+
+        base = domain.rsplit('.', 1)[0]
+        if any(domain.startswith(p) for p in ["news.", "epaper.", "jobs.", "secure."]) or \
+           base.endswith(("times", "news", "jobs", "daily")):
+            return ""
+
         return domain
     except Exception:
         return ""

@@ -6,7 +6,7 @@ from extractors.contact_miner import clean_email, clean_phone
 
 from transformers.opportunity_auditor import STOP_WORDS_AND_TITLES
 
-from extractors.search_radar import SKIP_DOMAINS
+from extractors.search_radar import SKIP_DOMAINS, clean_target_domain
 
 def sanitize_email_list(emails_str: str, domain: str) -> list:
     """Uses canonical email cleaner to filter list."""
@@ -58,11 +58,8 @@ def run_self_healing_cycle() -> dict:
     for row in rows:
         lead_id, domain, company_name, website, emails_raw, phones_raw, pitch, hook, contact_raw = row
 
-        # 0. Check if domain is blacklisted or non-business media/blog/retro project
-        dom_lower = (domain or "").lower()
-        if any(skip in dom_lower for skip in SKIP_DOMAINS) or \
-           dom_lower.endswith((".art", ".museum", ".gov", ".edu", ".mil")) or \
-           any(dom_lower.startswith(sub) for sub in ["blog.", "docs.", "developer.", "api.", "status."]):
+        # 0. Check if domain is qualified commercial prospect
+        if not clean_target_domain(f"https://{domain}"):
             cursor.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
             deleted_count += 1
             continue
