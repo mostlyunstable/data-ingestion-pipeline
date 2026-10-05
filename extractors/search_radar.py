@@ -30,11 +30,22 @@ SKIP_DOMAINS = {
     "investopedia.com", "coursera.org", "udemy.com", "forbes.com", "techcrunch.com", "crunchbase.com",
     "gov.in", "nic.in", "reliancedigital.in", "flipkart.com",
 
-    # Platform hubs
+    # News, Media & Content Publishers (not prospective client businesses)
+    "theverge.com", "politico.com", "wsj.com", "nytimes.com", "bloomberg.com", "reuters.com",
+    "cnn.com", "bbc.com", "theguardian.com", "wired.com", "arstechnica.com", "gizmodo.com",
+    "businessinsider.com", "gnome.org", "grapheneos.org", "uceprotect.net", "whitelisted.org",
+    "washingtonpost.com", "usatoday.com", "huffpost.com", "nbcnews.com", "cnbc.com",
+    "techfundingnews.com", "techmeme.com", "theinformation.com", "venturebeat.com", "zdnet.com",
+    "cnet.com", "techradar.com", "stratechery.com", "nobelprize.org", "archive.org", "eff.org",
+
+    # Personal hobby, retro, art, and non-commercial portfolio sites
+    "dosdays.co.uk", "niklasroy.com", "thoreaubasic.com", "stillwet.art", "dmitrybrant.com",
+
+    # Platform hubs & Foundation models
     "news.ycombinator.com", "ycombinator.com", "producthunt.com",
     "shopify.com", "wordpress.com", "wordpress.org", "wix.com", "squarespace.com",
     "webflow.com", "hubspot.com", "salesforce.com", "mailchimp.com", "klaviyo.com",
-    "stripe.com", "paypal.com"
+    "stripe.com", "paypal.com", "anthropic.com", "openai.com"
 }
 
 def decode_bing_u(u_val: str) -> str:
@@ -82,8 +93,18 @@ def clean_target_domain(url: str) -> str:
         if any(skip in domain for skip in SKIP_DOMAINS):
             return ""
 
-        # Filter out government & educational portals
-        if domain.endswith(".gov") or domain.endswith(".edu") or domain.endswith(".mil"):
+        # Filter out government, educational portals, personal blogs, and non-commercial TLDs
+        if (domain.endswith(".gov") or domain.endswith(".edu") or domain.endswith(".mil") or
+            domain.endswith(".art") or domain.endswith(".museum") or
+            domain.startswith("blog.") or ".blogspot." in domain or ".wordpress." in domain or
+            domain.endswith(".org.in") or domain.endswith(".nic.in")):
+            return ""
+
+        # Filter out documentation, developer, api, and infrastructure subdomains
+        if any(domain.startswith(sub) for sub in [
+            "docs.", "doc.", "developer.", "developers.", "api.", "status.",
+            "support.", "help.", "community.", "forum.", "cdn.", "assets."
+        ]):
             return ""
 
         return domain

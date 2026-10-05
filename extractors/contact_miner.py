@@ -79,8 +79,18 @@ def clean_email(email: str, company_domain: str = "") -> str:
         user = 'info'
         email = f"info@{domain}"
 
+    # Strip run-on concatenated page names from email domains (e.g. .comaccounts -> .com)
+    runon_match = re.search(r'(\.(?:com|co\.in|org\.in|org|net|io|ai|app|dev|tech|in|co))(accounts|top|about|contact|terms|privacy|home|services|support|help|team|jobs|blog|press|login|signup|portal)$', domain)
+    if runon_match:
+        domain = domain[:runon_match.end(1)]
+        email = f"{user}@{domain}"
+
     # Filter out dummy / placeholder usernames
-    if user in ["you", "yourname", "user", "username", "name", "email", "test", "demo", "sample", "sam", "fake", "admin", "null", "undefined"]:
+    if user in ["you", "your", "yourname", "user", "username", "name", "email", "test", "demo", "sample", "sam", "fake", "admin", "null", "undefined"]:
+        return ""
+
+    # Filter out automated test accounts, QA runners, and stress-test addresses
+    if any(bot in user for bot in ["automation", "sanity", "paralleluser", "testuser", "bot-", "perf@", "smoke-test"]):
         return ""
 
     # TLD must be purely alphabetic (rejects package versions like @1.11.3)
@@ -94,6 +104,27 @@ def clean_email(email: str, company_domain: str = "") -> str:
     if any(lib in user for lib in ['bootstrap', 'jquery', 'slick', 'carousel', 'swiper', 'fontawesome', 'webpack', 'react']):
         return ""
 
+    # Filter out dummy / error-tracking / infrastructure domain signatures
+    if any(ign in domain for ign in [
+        "sentry.io", "ingest", "wixpress.com", "gravatar.com", "schema.org",
+        "cloudflare.com", "example.com", "example.org", "dummy.com", "test.com",
+        "domain.com", "yourdomain.com", "mycompany.com", "github.com", "kimchang.com",
+        "google.com", "apple.com", "microsoft.com", "wikimedia.org", "work-email.com"
+    ]):
+        return ""
+
+    # Filter out sentry hex token endpoints (e.g. 344003a8d11c41d8800fbad8383fdc50)
+    if re.match(r'^[a-f0-9]{20,64}$', user):
+        return ""
+
+    # Filter out template placeholders and non-human inboxes
+    if user in [
+        "firstname.lastname", "first.last", "john.doe", "jane.doe", "name.surname",
+        "dpo", "legal-notices", "abuse", "noc", "security", "privacy", "privacy-policy",
+        "someone", "yourname", "username", "email", "mail", "your"
+    ]:
+        return ""
+
     # Filter out dummy domain roots (acme.*, example.*, etc.)
     root_domain = domain.split('.')[0].lower()
     if root_domain in DUMMY_DOMAIN_ROOTS:
@@ -103,6 +134,13 @@ def clean_email(email: str, company_domain: str = "") -> str:
         return ""
     if user in IGNORED_EMAIL_PREFIXES:
         return ""
+
+    # Smart reconciliation if email domain was chopped relative to company_domain
+    if company_domain:
+        cdom = company_domain.lower()
+        if cdom.startswith(domain) and len(cdom) == len(domain) + 1 and cdom.endswith('m'):
+            domain = cdom
+            email = f"{user}@{domain}"
 
     return email
 

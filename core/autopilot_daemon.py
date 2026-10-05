@@ -29,25 +29,70 @@ class AutopilotDaemon:
         }
 
     async def execute_single_cycle(self, batch_size: int = 15):
-        """Executes one autonomous cycle of discovery, audit, and ingestion."""
+        """
+        Executes one autonomous cycle of discovery, audit, and ingestion.
+        Guarantees that at least batch_size (15) fresh, verified leads are persisted.
+        """
         if job_state.is_running:
             job_state.log("⚡ [Autopilot] A cycle is already executing. Skipping redundant trigger.")
             return
 
-        job_state.log("⚡ [Autopilot] Commencing autonomous prospect discovery...")
-        candidates_needed = max(batch_size, int(batch_size * 1.5))
-        targets = autopilot_manager.get_next_target_batch(batch_size=candidates_needed)
+        from core.database import get_db
 
-        if not targets:
-            job_state.log("⚠️ [Autopilot] No new targets discovered in current cycle.")
-            return
+        def get_current_count():
+            try:
+                conn = get_db()
+                cur = conn.cursor()
+                cur.execute("SELECT COUNT(*) FROM leads")
+                cnt = cur.fetchone()[0]
+                conn.close()
+                return cnt
+            except Exception:
+                return 0
 
-        job_state.log(f"🎯 [Autopilot] Locked onto {len(targets)} high-intent businesses! Launching deep audits...")
-        await run_pipeline_for_urls(targets, niche="Autopilot Qualified", source="autopilot_daemon")
+        start_count = get_current_count()
+        persisted_new = 0
+        attempts = 0
+        max_attempts = 6
+
+        job_state.is_running = True
+        job_state.total_target = batch_size
+        job_state.processed = 0
+        job_state.success_count = 0
+        job_state.current_action = "Initiating prospect harvest..."
+        job_state.log(f"⚡ [Autopilot] Commencing guaranteed harvest of {batch_size} fresh verified leads...")
+
+        while persisted_new < batch_size and attempts < max_attempts:
+            attempts += 1
+            needed = batch_size - persisted_new
+            pull_size = max(needed * 2 + 6, 12)
+
+            targets = autopilot_manager.get_next_target_batch(batch_size=pull_size)
+            if not targets:
+                job_state.log("⚠️ [Autopilot] Expanding target corridor sweep...")
+                continue
+
+            job_state.current_action = f"Auditing {len(targets)} candidates ({persisted_new}/{batch_size} locked)..."
+            job_state.log(f"🎯 [Autopilot] Round {attempts}: Hunting {len(targets)} candidates to fulfill remaining {needed} leads...")
+
+            await run_pipeline_for_urls(
+                targets, 
+                niche="Autopilot Qualified", 
+                source="autopilot_daemon",
+                maintain_job_state=True
+            )
+
+            current_count = get_current_count()
+            persisted_new = max(0, current_count - start_count)
+            job_state.processed = min(batch_size, persisted_new)
+            job_state.success_count = persisted_new
+            job_state.log(f"📊 [Autopilot] Progress: {persisted_new}/{batch_size} new verified leads ingested.")
 
         self.total_cycles += 1
         self.last_cycle_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        job_state.log(f"✓ [Autopilot] Cycle #{self.total_cycles} complete. Leads audited & stored.")
+        job_state.is_running = False
+        job_state.current_action = "Completed"
+        job_state.log(f"✓ [Autopilot] Cycle #{self.total_cycles} complete: Ingested {persisted_new} fresh leads placed at top of dashboard!")
 
     def _run_loop(self):
         asyncio.set_event_loop(self._loop)

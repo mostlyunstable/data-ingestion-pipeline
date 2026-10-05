@@ -100,16 +100,19 @@ async def process_company_lead(url: str, niche: str, source: str) -> dict:
         job_state.log(f"Error processing {url}: {e}")
         return None
 
-async def run_pipeline_for_urls(urls: list, niche: str = "", source: str = "direct"):
+async def run_pipeline_for_urls(urls: list, niche: str = "", source: str = "direct", maintain_job_state: bool = False):
     """Runs concurrent ingestion for a batch of target URLs."""
     global job_state
-    job_state.is_running = True
-    job_state.total_target = len(urls)
-    job_state.processed = 0
-    job_state.success_count = 0
-    job_state.emails_found = 0
-    job_state.phones_found = 0
-    job_state.log(f"Initiating pipeline for {len(urls)} targets...")
+    if not maintain_job_state:
+        job_state.is_running = True
+        job_state.total_target = len(urls)
+        job_state.processed = 0
+        job_state.success_count = 0
+        job_state.emails_found = 0
+        job_state.phones_found = 0
+        job_state.log(f"Initiating pipeline for {len(urls)} targets...")
+    else:
+        job_state.log(f"Initiating batch audit for {len(urls)} candidate prospects...")
 
     semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
@@ -117,9 +120,11 @@ async def run_pipeline_for_urls(urls: list, niche: str = "", source: str = "dire
         async with semaphore:
             job_state.current_action = f"Scanning {target_url[:40]}..."
             res = await process_company_lead(target_url, niche=niche, source=source)
-            job_state.processed += 1
+            if not maintain_job_state:
+                job_state.processed += 1
             if res and res["lead"]:
-                job_state.success_count += 1
+                if not maintain_job_state:
+                    job_state.success_count += 1
                 lead = res["lead"]
                 emails = lead.get("emails", [])
                 phones = lead.get("phones", [])
@@ -128,16 +133,17 @@ async def run_pipeline_for_urls(urls: list, niche: str = "", source: str = "dire
                 if phones:
                     job_state.phones_found += len(phones)
 
-                job_state.log(f"✓ Sucked in: {lead.get('company_name')} ({lead.get('domain')}) | {len(emails)} emails")
+                job_state.log(f"✓ Verified: {lead.get('company_name')} ({lead.get('domain')}) | {len(emails)} emails")
             else:
-                job_state.log(f"✕ Skipping unresolvable: {target_url}")
+                job_state.log(f"✕ Filtered out: {target_url}")
 
     tasks = [sem_worker(u) for u in urls]
     await asyncio.gather(*tasks, return_exceptions=True)
 
-    job_state.is_running = False
-    job_state.current_action = "Completed"
-    job_state.log(f"Pipeline finished! Extracted {job_state.success_count} businesses.")
+    if not maintain_job_state:
+        job_state.is_running = False
+        job_state.current_action = "Completed"
+        job_state.log(f"Pipeline finished! Extracted {job_state.success_count} businesses.")
 
 async def run_niche_radar_pipeline(niche: str, location: str, limit: int = 20):
     """

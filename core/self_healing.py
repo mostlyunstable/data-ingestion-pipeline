@@ -6,6 +6,8 @@ from extractors.contact_miner import clean_email, clean_phone
 
 from transformers.opportunity_auditor import STOP_WORDS_AND_TITLES
 
+from extractors.search_radar import SKIP_DOMAINS
+
 def sanitize_email_list(emails_str: str, domain: str) -> list:
     """Uses canonical email cleaner to filter list."""
     if not emails_str:
@@ -31,12 +33,13 @@ def sanitize_phone_list(phones_str: str) -> list:
 def run_self_healing_cycle() -> dict:
     """
     Scans entire database and executes self-healing:
-    1. Removes empty records lacking verified email or phone
-    2. Cleans company brand names
-    3. Cleans emails and removes template junk
-    4. Cleans phones and strips truncated numbers
-    5. Purifies contact decision-maker names and greetings
-    6. Repairs outreach pitches to match cleaned brand names
+    1. Removes blacklisted non-business / news / media / hobby domains
+    2. Removes empty records lacking verified email or phone
+    3. Cleans company brand names
+    4. Cleans emails and removes template junk or error tracking tokens
+    5. Cleans phones and strips truncated numbers
+    6. Purifies contact decision-maker names and greetings
+    7. Repairs outreach pitches to match cleaned brand names
     """
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.execute("PRAGMA journal_mode=WAL;")
@@ -55,11 +58,20 @@ def run_self_healing_cycle() -> dict:
     for row in rows:
         lead_id, domain, company_name, website, emails_raw, phones_raw, pitch, hook, contact_raw = row
 
+        # 0. Check if domain is blacklisted or non-business media/blog/retro project
+        dom_lower = (domain or "").lower()
+        if any(skip in dom_lower for skip in SKIP_DOMAINS) or \
+           dom_lower.endswith((".art", ".museum", ".gov", ".edu", ".mil")) or \
+           any(dom_lower.startswith(sub) for sub in ["blog.", "docs.", "developer.", "api.", "status."]):
+            cursor.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
+            deleted_count += 1
+            continue
+
         # 1. Clean Emails & Phones
         clean_emails = sanitize_email_list(emails_raw or "", domain or "")
         clean_phones = sanitize_phone_list(phones_raw or "")
 
-        # 2. Check if lead has direct contact points (must have email or phone)
+        # 2. Check if lead has direct contact points (must have verified email or phone)
         if not (clean_emails or clean_phones):
             cursor.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
             deleted_count += 1

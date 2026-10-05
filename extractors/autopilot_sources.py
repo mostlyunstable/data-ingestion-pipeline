@@ -103,19 +103,56 @@ VERIFIED_TARGET_SEED_CORPUS = [
     "https://trubrain.com", "https://four-sigmatic.com", "https://kosas.com",
     "https://iliabeauty.com", "https://tower28beauty.com", "https://meritbeauty.com",
     "https://saiehello.com", "https://rarebeauty.com", "https://fentybeauty.com",
-    "https://rhode.com", "https://ouai.com", "https://gisou.com"
+    "https://rhode.com", "https://ouai.com", "https://gisou.com",
+
+    # Automation, Workflow & Modern Integration Pioneers
+    "https://make.com", "https://activepieces.com", "https://n8n.io",
+    "https://relay.app", "https://gumloop.com", "https://paragon.com",
+    "https://alloyautomation.com", "https://bardeen.ai", "https://axiom.ai",
+    "https://harpa.ai", "https://browse.ai", "https://simplescraper.io",
+    "https://buildship.com", "https://fastgen.com",
+
+    # Mobile App Dev & Low-Code Platform Pioneers
+    "https://expo.dev", "https://tamagui.dev", "https://flutterflow.io",
+    "https://draftbit.com", "https://glideapps.com", "https://bravostudio.app",
+    "https://bubble.io", "https://softr.io", "https://adalo.com",
+
+    # Indian D2C Powerhouses & High Growth Brands
+    "https://boat-lifestyle.com", "https://noise.com", "https://fireboltt.com",
+    "https://boultaudio.com", "https://portronics.com", "https://headsupfortails.com",
+    "https://supertails.com", "https://countrydelight.in", "https://epigamia.com",
+    "https://slurpfarm.com", "https://trueelements.com", "https://yogabar.in",
+    "https://chaayos.com", "https://bluetokaicoffee.com", "https://sleepyowl.co",
+    "https://thirdwavecoffeeroasters.com", "https://ragecoffee.com", "https://suta.in",
+    "https://chumbak.com", "https://dailyobjects.com", "https://mokobara.com",
+    "https://uppercase.in", "https://zouk.co.in", "https://bunaai.com",
+
+    # Global High Growth D2C & Apparel Innovators
+    "https://gymshark.com", "https://nobullproject.com", "https://vuoriclothing.com",
+    "https://aloyoga.com", "https://tentree.com", "https://kotn.com",
+    "https://brooklinen.com", "https://parachutehome.com", "https://cozyearth.com",
+    "https://bollandbranch.com", "https://meundies.com", "https://tommyjohn.com",
+    "https://mackweldon.com", "https://rothys.com", "https://birdies.com",
+    "https://thursdayboots.com", "https://koio.co", "https://greats.com",
+    "https://cuyana.com", "https://senreve.com", "https://dagnedover.com",
+    "https://monos.com", "https://july.com",
+
+    # Cold Outreach, Ingestion & Sales Tech Tools
+    "https://clay.com", "https://instantly.ai", "https://smartlead.ai",
+    "https://lemlist.com", "https://reply.io", "https://woodpecker.co",
+    "https://saleshandy.com", "https://quickmail.io", "https://mailshake.com",
+    "https://klenty.com", "https://hightouch.com", "https://census.com"
 ]
 
 def fetch_rss_startup_launches() -> list:
     """
-    Autonomously harvests newly launched startups and software products from RSS feeds.
-    Pulls from Show HN, HN Jobs, and newest founder launches.
+    Autonomously harvests newly launched startups, digital platforms, and software products from RSS feeds.
+    Pulls exclusively from Show HN and HN Jobs to ensure real prospective businesses.
     """
     discovered_urls = []
     feeds = [
         "https://hnrss.org/show?points=10",
-        "https://hnrss.org/jobs",
-        "https://hnrss.org/newest?points=10"
+        "https://hnrss.org/jobs"
     ]
 
     headers = {"User-Agent": random.choice(USER_AGENTS)}
@@ -126,6 +163,16 @@ def fetch_rss_startup_launches() -> list:
             if resp.status_code == 200:
                 root = ET.fromstring(resp.content)
                 for item in root.findall(".//item"):
+                    title = item.find("title")
+                    title_text = title.text.lower() if title is not None and title.text else ""
+                    
+                    # Ignore retro, art, hobby, or non-commercial projects
+                    if any(skip in title_text for skip in [
+                        "retro", "emulator", "game boy", "hobby", "art project",
+                        "wallpaper", "personal blog", "manifesto", "poem", "fyi", "ask hn"
+                    ]):
+                        continue
+
                     link = item.find("link")
                     desc = item.find("description")
                     desc_text = desc.text if desc is not None else ""
