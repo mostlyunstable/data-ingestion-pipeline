@@ -18,16 +18,78 @@
     }
     .mono { font-family: 'JetBrains Mono', monospace; }
 
+    /* Universal Cursor Pointer & Tactile Click System */
+    button, 
+    a, 
+    input[type="button"], 
+    input[type="submit"], 
+    [role="button"],
+    .clickable {
+      cursor: pointer !important;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    /* Tactile Press Physics for All Interactive Elements */
+    button, 
+    .btn-tactile,
+    .card-minimal,
+    .filter-pill,
+    .kpi-card {
+      transition: all 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, box-shadow;
+    }
+
+    button:active:not(:disabled),
+    .btn-tactile:active:not(:disabled),
+    .filter-pill:active {
+      transform: scale(0.96) translateY(1px) !important;
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08) !important;
+    }
+
+    button:hover:not(:disabled),
+    .btn-tactile:hover:not(:disabled) {
+      transform: translateY(-0.5px);
+    }
+
+    button:disabled, .disabled {
+      opacity: 0.6;
+      cursor: not-allowed !important;
+      pointer-events: none;
+      transform: none !important;
+    }
+
     /* Minimalist Elevation */
     .card-minimal {
       background: #ffffff;
       border: 1px solid #e2e8f0;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .card-minimal:hover {
       border-color: #cbd5e1;
-      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 4px 6px -2px rgba(15, 23, 42, 0.02);
+      transform: translateY(-1.5px);
+    }
+
+    /* KPI Card Active States */
+    .kpi-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      cursor: pointer !important;
+    }
+    .kpi-card:hover {
+      border-color: #94a3b8;
+      box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
       transform: translateY(-1px);
+    }
+    .kpi-card:active {
+      transform: scale(0.98) translateY(1px);
+    }
+    .kpi-card.active-kpi {
+      border-color: #0f172a;
+      background-color: #f8fafc;
+      box-shadow: 0 0 0 1px #0f172a;
     }
 
     /* Subtle Minimalist Scrollbar */
@@ -35,22 +97,41 @@
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Modal Animation */
+    .modal-backdrop {
+      animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .modal-sheet {
+      animation: scaleIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.96) translateY(6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
   </style>
 </head>
 <body class="min-h-screen selection:bg-slate-200 selection:text-slate-900 bg-slate-50/50">
 
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
   <!-- Header -->
-  <header class="border-b border-slate-200/80 bg-white/90 backdrop-blur-md sticky top-0 z-40">
+  <header class="border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 py-3.5 flex items-center justify-between">
       
-      <!-- Minimal Brand Emblem -->
-      <div class="flex items-center gap-3.5">
-        <div class="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-white text-xs font-mono font-medium shadow-xs">
+      <!-- Minimal Brand Emblem (Clickable to reset all filters) -->
+      <div onclick="resetAllFilters()" class="flex items-center gap-3.5 cursor-pointer group" title="Reset all filters and view full warehouse">
+        <div class="w-9 h-9 rounded-xl bg-slate-900 group-hover:bg-slate-800 flex items-center justify-center text-white text-xs font-mono font-medium shadow-xs transition">
           OL
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-xs tracking-wider uppercase font-bold text-slate-900">OmniLead</h1>
+            <h1 class="text-xs tracking-wider uppercase font-bold text-slate-900 group-hover:text-slate-700 transition">OmniLead</h1>
             <span class="text-[9px] font-mono tracking-wider uppercase px-2 py-0.5 rounded-md border border-slate-200 text-slate-600 bg-slate-100 font-medium">
               Autopilot
             </span>
@@ -64,26 +145,26 @@
       <!-- Action Suite -->
       <div class="flex items-center gap-2.5">
         <!-- Self Healing Trigger -->
-        <button onclick="triggerSelfHeal()" id="self-heal-btn" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs text-slate-600 hover:text-slate-900 transition flex items-center gap-2 bg-white shadow-xs" title="Execute Data Integrity Diagnostics">
+        <button onclick="triggerSelfHeal()" id="self-heal-btn" class="btn-tactile px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs text-slate-600 hover:text-slate-900 transition flex items-center gap-2 bg-white shadow-xs" title="Execute Data Integrity Diagnostics">
           <i class="fa-solid fa-shield-halved text-xs text-slate-500"></i>
           <span>Self-Heal</span>
         </button>
 
         <!-- Fresh Ingestion -->
-        <button onclick="triggerAutonomousCycle()" id="sweep-btn" class="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition flex items-center gap-2 shadow-xs">
+        <button onclick="triggerAutonomousCycle()" id="sweep-btn" class="btn-tactile px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition flex items-center gap-2 shadow-xs" title="Extract 15 Fresh Targets Automatically">
           <i class="fa-solid fa-arrow-down-long text-xs"></i>
           <span>Harvest 15 Leads</span>
         </button>
 
         <!-- CSV Export -->
-        <a href="/api/export-csv" target="_blank" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 transition flex items-center gap-2 shadow-xs">
+        <a href="/api/export-csv" onclick="showToast('Exporting leads warehouse to CSV...', 'info')" target="_blank" class="btn-tactile px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 transition flex items-center gap-2 shadow-xs" title="Download SQLite records as CSV">
           <i class="fa-solid fa-download text-xs text-slate-500"></i>
           <span>Export CSV</span>
         </a>
 
         <!-- Refresh -->
-        <button onclick="loadAllData()" class="p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300 transition bg-white shadow-xs" title="Refresh">
-          <i class="fa-solid fa-rotate-right text-xs"></i>
+        <button onclick="handleRefreshClick()" id="refresh-btn" class="btn-tactile p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300 transition bg-white shadow-xs" title="Refresh Live Data">
+          <i id="refresh-icon" class="fa-solid fa-rotate-right text-xs"></i>
         </button>
       </div>
 
@@ -93,52 +174,72 @@
   <!-- Main Container -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-24 space-y-7">
 
-    <!-- KPI Metric Cards (Clean, Minimal, Subtle Borders) -->
+    <!-- KPI Metric Cards (Interactive Clickable Power Filters) -->
     <section class="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-      <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Qualified Leads</p>
+      <div onclick="toggleKpiFilter('all')" id="kpi-total" class="kpi-card p-4 rounded-xl shadow-xs relative group" title="Click to show all prospects">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Qualified Leads</p>
+          <span class="text-[9px] text-slate-400 group-hover:text-slate-700 opacity-0 group-hover:opacity-100 transition mono">All</span>
+        </div>
         <p id="stat-total" class="text-2xl font-semibold text-slate-900 mt-1">0</p>
         <span class="text-[10px] text-slate-500 font-mono">Stored in database</span>
       </div>
 
-      <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Direct Inboxes</p>
+      <div onclick="toggleKpiFilter('email')" id="kpi-emails" class="kpi-card p-4 rounded-xl shadow-xs relative group" title="Click to filter prospects with verified emails">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Direct Inboxes</p>
+          <span class="text-[9px] text-slate-400 group-hover:text-slate-700 opacity-0 group-hover:opacity-100 transition mono">Filter</span>
+        </div>
         <p id="stat-emails" class="text-2xl font-semibold text-slate-900 mt-1">0</p>
         <span class="text-[10px] text-slate-500 font-mono">Verified contacts</span>
       </div>
 
-      <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Direct Phones</p>
+      <div onclick="toggleKpiFilter('phone')" id="kpi-phones" class="kpi-card p-4 rounded-xl shadow-xs relative group" title="Click to filter prospects with phone numbers">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Direct Phones</p>
+          <span class="text-[9px] text-slate-400 group-hover:text-slate-700 opacity-0 group-hover:opacity-100 transition mono">Filter</span>
+        </div>
         <p id="stat-phones" class="text-2xl font-semibold text-slate-900 mt-1">0</p>
         <span class="text-[10px] text-slate-500 font-mono">India & Global</span>
       </div>
 
-      <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Profiles Tracked</p>
+      <div onclick="toggleKpiFilter('linkedin')" id="kpi-linkedin" class="kpi-card p-4 rounded-xl shadow-xs relative group" title="Click to filter prospects with LinkedIn profiles">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Profiles Tracked</p>
+          <span class="text-[9px] text-slate-400 group-hover:text-slate-700 opacity-0 group-hover:opacity-100 transition mono">Filter</span>
+        </div>
         <p id="stat-linkedin" class="text-2xl font-semibold text-slate-900 mt-1">0</p>
         <span class="text-[10px] text-slate-500 font-mono">Leadership identified</span>
       </div>
 
-      <div class="p-4 rounded-xl bg-white border border-slate-200 shadow-xs">
-        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Territories</p>
+      <div onclick="cycleCountryFilter()" id="kpi-countries" class="kpi-card p-4 rounded-xl shadow-xs relative group" title="Click to cycle territories">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] uppercase tracking-wider text-slate-400 font-medium">Territories</p>
+          <span id="country-active-tag" class="text-[9px] text-slate-400 group-hover:text-slate-700 opacity-0 group-hover:opacity-100 transition mono">Cycle</span>
+        </div>
         <p id="stat-countries" class="text-2xl font-semibold text-slate-900 mt-1">0</p>
-        <span class="text-[10px] text-slate-500 font-mono">India, US, UK, Global</span>
+        <span id="country-subtitle" class="text-[10px] text-slate-500 font-mono">India, US, UK, Global</span>
       </div>
     </section>
 
-    <!-- Live Diagnostics Progress Bar (Appears when sweeping) -->
+    <!-- Live Diagnostics Progress Bar (Appears during sweep) -->
     <div id="live-progress-container" class="hidden p-4 rounded-xl bg-white border border-slate-200 shadow-xs space-y-2.5">
       <div class="flex items-center justify-between text-xs">
         <div class="flex items-center gap-2 text-slate-700 font-medium">
           <i class="fa-solid fa-circle-notch fa-spin text-xs text-slate-900"></i>
           <span id="live-action-status">Autonomous Sweep Active...</span>
         </div>
-        <span id="live-progress-pct" class="mono font-semibold text-slate-500">0%</span>
+        <div class="flex items-center gap-3">
+          <span id="live-progress-pct" class="mono font-semibold text-slate-500">0%</span>
+          <button onclick="toggleTerminalLogs()" class="text-slate-400 hover:text-slate-700 text-xs" title="Toggle logs view">
+            <i id="toggle-logs-icon" class="fa-solid fa-chevron-up"></i>
+          </button>
+        </div>
       </div>
       <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
         <div id="progress-bar-fill" class="bg-slate-900 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
       </div>
-      <div id="terminal-logs" class="bg-slate-50 p-2.5 rounded-lg mono text-[10px] text-slate-600 h-18 overflow-y-auto space-y-0.5 border border-slate-200">
+      <div id="terminal-logs" class="bg-slate-50 p-2.5 rounded-lg mono text-[10px] text-slate-600 h-20 overflow-y-auto space-y-0.5 border border-slate-200">
         <div>[System] Diagnostics active...</div>
       </div>
     </div>
@@ -146,25 +247,25 @@
     <!-- Navigation & Filter Bar -->
     <section class="flex flex-col md:flex-row md:items-center justify-between gap-3 p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs">
       
-      <!-- Category Filter Pills -->
+      <!-- Category Filter Pills with Live Counters -->
       <div class="flex flex-wrap items-center gap-1.5">
-        <button onclick="setServiceFilter('')" id="pill-all" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-white transition">
-          All Opportunities
+        <button onclick="setServiceFilter('')" id="pill-all" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-white transition">
+          <span id="label-all">All Opportunities</span>
         </button>
-        <button onclick="setServiceFilter('Chatbots')" id="pill-Chatbots" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
-          Chatbots
+        <button onclick="setServiceFilter('Chatbots')" id="pill-Chatbots" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
+          <span id="label-Chatbots">Chatbots</span>
         </button>
-        <button onclick="setServiceFilter('Web Development')" id="pill-Web" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
-          Web Dev
+        <button onclick="setServiceFilter('Web Development')" id="pill-Web" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
+          <span id="label-Web">Web Dev</span>
         </button>
-        <button onclick="setServiceFilter('App Development')" id="pill-App" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
-          Mobile Apps
+        <button onclick="setServiceFilter('App Development')" id="pill-App" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
+          <span id="label-App">Mobile Apps</span>
         </button>
-        <button onclick="setServiceFilter('Automation')" id="pill-Auto" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
-          Automation
+        <button onclick="setServiceFilter('Automation')" id="pill-Auto" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
+          <span id="label-Auto">Automation</span>
         </button>
-        <button onclick="setServiceFilter('Custom Pipelines')" id="pill-Pipe" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
-          Pipelines
+        <button onclick="setServiceFilter('Custom Pipelines')" id="pill-Pipe" class="filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition">
+          <span id="label-Pipe">Pipelines</span>
         </button>
       </div>
 
@@ -172,16 +273,19 @@
       <div class="flex items-center gap-2.5">
         <div class="relative w-64">
           <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-          <input type="text" id="filter-search" oninput="debounceLoadLeads()" placeholder="Search prospects..." 
-                 class="w-full pl-8.5 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition">
+          <input type="text" id="filter-search" oninput="handleSearchInput()" placeholder="Search prospects..." 
+                 class="w-full pl-8.5 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition">
+          <button onclick="clearSearchInput()" id="clear-search-btn" class="hidden absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 text-xs p-0.5" title="Clear search">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
 
         <!-- View Switcher -->
         <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-          <button onclick="setViewMode('cards')" id="view-cards-btn" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-2xs transition">
+          <button onclick="setViewMode('cards')" id="view-cards-btn" class="btn-tactile px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-2xs transition">
             Cards
           </button>
-          <button onclick="setViewMode('table')" id="view-table-btn" class="px-2.5 py-1 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 transition">
+          <button onclick="setViewMode('table')" id="view-table-btn" class="btn-tactile px-2.5 py-1 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 transition">
             Table
           </button>
         </div>
@@ -203,7 +307,7 @@
             <th class="py-3 px-4 font-medium">Opportunity</th>
             <th class="py-3 px-4 font-medium">Advantage (Praise)</th>
             <th class="py-3 px-4 font-medium">Identified Bottleneck</th>
-            <th class="py-3 px-4 font-medium">Contact</th>
+            <th class="py-3 px-4 font-medium">Direct Inboxes / Contacts</th>
             <th class="py-3 px-4 text-right font-medium">Action</th>
           </tr>
         </thead>
@@ -214,43 +318,48 @@
     </div>
 
     <!-- Empty State -->
-    <div id="empty-state" class="hidden py-20 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
+    <div id="empty-state" class="hidden py-16 text-center space-y-3.5 bg-white rounded-2xl border border-slate-200 shadow-xs">
       <div class="w-10 h-10 mx-auto rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-sm">
         <i class="fa-regular fa-folder-open"></i>
       </div>
       <div>
-        <h3 class="text-sm font-medium text-slate-900">No matching prospects found</h3>
-        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+        <h3 id="empty-state-title" class="text-sm font-semibold text-slate-900">No matching prospects found</h3>
+        <p id="empty-state-desc" class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
           Harvest new leads or adjust your active search filters.
         </p>
       </div>
-      <button onclick="triggerAutonomousCycle()" class="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium inline-flex items-center gap-2 shadow-xs transition">
-        <i class="fa-solid fa-arrow-down-long text-xs"></i> Harvest Leads
-      </button>
+      <div class="flex items-center justify-center gap-2 pt-1">
+        <button onclick="resetAllFilters()" class="btn-tactile px-3.5 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-medium shadow-2xs transition">
+          Clear Filters
+        </button>
+        <button onclick="triggerAutonomousCycle()" class="btn-tactile px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium inline-flex items-center gap-2 shadow-xs transition">
+          <i class="fa-solid fa-arrow-down-long text-xs"></i> Harvest Leads
+        </button>
+      </div>
     </div>
 
   </main>
 
   <!-- Confidential Outreach Proposition Modal -->
-  <div id="pitch-modal" class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white max-w-2xl w-full rounded-2xl p-6 space-y-5 border border-slate-200 shadow-xl relative max-h-[92vh] overflow-y-auto">
+  <div id="pitch-modal" class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+    <div id="modal-sheet" class="bg-white max-w-2xl w-full rounded-2xl p-6 space-y-5 border border-slate-200 shadow-2xl relative max-h-[92vh] overflow-y-auto modal-sheet">
       
-      <button onclick="closeModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-900 p-1 rounded-lg hover:bg-slate-100 transition">
+      <button onclick="closeModal()" class="btn-tactile absolute top-5 right-5 text-slate-400 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 transition" title="Close (Esc)">
         <i class="fa-solid fa-xmark text-sm"></i>
       </button>
 
       <!-- Modal Header -->
       <div class="space-y-1">
         <div class="flex items-center gap-2">
-          <span id="modal-service-badge" class="px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+          <button onclick="filterFromModalService()" id="modal-service-badge" class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition" title="Filter by this service">
             Service Match
-          </span>
-          <span id="modal-country-badge" class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-50 text-slate-600 border border-slate-200">
+          </button>
+          <button onclick="filterFromModalCountry()" id="modal-country-badge" class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 transition" title="Filter by this territory">
             Territory
-          </span>
+          </button>
         </div>
         <h2 id="modal-company-name" class="text-lg font-semibold text-slate-900 tracking-tight pt-1">Company Name</h2>
-        <a id="modal-website-link" href="#" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-600 hover:text-slate-900 hover:underline flex items-center gap-1.5 mono font-normal">
+        <a id="modal-website-link" href="#" target="_blank" rel="noopener noreferrer" class="text-xs text-slate-600 hover:text-slate-900 hover:underline inline-flex items-center gap-1.5 mono font-normal">
           <span id="modal-domain">domain.com</span>
           <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
         </a>
@@ -291,10 +400,16 @@
           <span class="text-xs font-mono uppercase tracking-wider text-slate-700 flex items-center gap-1.5 font-semibold">
             <span>◈</span> Outreach Proposition
           </span>
-          <button onclick="copyModalPitch()" id="copy-modal-pitch-btn" class="px-2.5 py-1 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium flex items-center gap-1.5 shadow-2xs transition">
-            <i class="fa-regular fa-copy text-xs"></i>
-            Copy Text
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="openGmailWebFromModal()" id="modal-gmail-btn" class="btn-tactile px-2.5 py-1 rounded-md bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 text-xs font-medium flex items-center gap-1.5 shadow-2xs transition" title="Open directly in Gmail Web">
+              <i class="fa-solid fa-envelope text-slate-600 text-xs"></i>
+              <span>Compose in Gmail</span>
+            </button>
+            <button onclick="copyModalPitch()" id="copy-modal-pitch-btn" class="btn-tactile px-2.5 py-1 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium flex items-center gap-1.5 shadow-2xs transition" title="Copy text to clipboard">
+              <i class="fa-regular fa-copy text-xs"></i>
+              <span>Copy Text</span>
+            </button>
+          </div>
         </div>
         <textarea id="modal-pitch-textarea" readonly rows="6" class="w-full text-xs text-slate-800 leading-relaxed font-mono bg-white p-3 rounded-lg border border-slate-200 resize-none focus:outline-none focus:border-slate-400 shadow-2xs"></textarea>
       </div>
@@ -313,8 +428,12 @@
       </div>
 
       <!-- Modal Footer -->
-      <div class="flex items-center justify-end pt-2 border-t border-slate-200">
-        <button onclick="closeModal()" class="px-4 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 transition shadow-2xs">
+      <div class="flex items-center justify-between pt-2 border-t border-slate-200">
+        <button onclick="deleteActiveModalLead()" class="btn-tactile px-3 py-1.5 rounded-lg border border-slate-200 hover:border-rose-200 text-slate-500 hover:text-rose-600 text-xs font-medium transition flex items-center gap-1.5">
+          <i class="fa-regular fa-trash-can text-xs"></i>
+          <span>Dismiss Lead</span>
+        </button>
+        <button onclick="closeModal()" class="btn-tactile px-4 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 transition shadow-2xs">
           Close
         </button>
       </div>
@@ -323,13 +442,83 @@
   </div>
 
   <script>
+    // State management
     let currentLeads = [];
     let activeModalLead = null;
     let pollInterval = null;
     let searchDebounceTimeout = null;
     let selectedServiceFilter = '';
+    let selectedCountryFilter = '';
+    let filterEmailOnly = false;
+    let filterPhoneOnly = false;
+    let filterLinkedinOnly = false;
     let currentViewMode = 'cards';
+    let availableCountries = [];
 
+    // Toast Notification System
+    function showToast(message, type = 'info', duration = 2400) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      const icon = type === 'success' ? 'fa-circle-check text-slate-800' :
+                   type === 'error' ? 'fa-circle-exclamation text-rose-600' :
+                   'fa-circle-info text-slate-700';
+
+      toast.className = "flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-slate-200 text-slate-800 text-xs rounded-xl shadow-lg transform translate-y-2 opacity-0 transition-all duration-200 font-medium";
+      toast.innerHTML = `<i class="fa-solid ${icon} text-xs"></i> <span>${message}</span>`;
+
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+      });
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 250);
+      }, duration);
+    }
+
+    // Bulletproof Copy Function
+    async function copyToClipboard(text, successMessage = 'Copied to clipboard!') {
+      if (!text) return false;
+      let copied = false;
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(text);
+          copied = true;
+        } catch (e) {
+          console.warn("navigator.clipboard failed, fallback used", e);
+        }
+      }
+      if (!copied) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '-9999px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          copied = document.execCommand('copy');
+        } catch (e) {
+          console.error("Fallback copy failed", e);
+        }
+        document.body.removeChild(ta);
+      }
+      if (copied) {
+        showToast(successMessage, 'success');
+      } else {
+        showToast('Failed to copy text', 'error');
+      }
+      return copied;
+    }
+
+    // View Switching
     function setViewMode(mode) {
       currentViewMode = mode;
       const cardsBtn = document.getElementById('view-cards-btn');
@@ -338,18 +527,21 @@
       const tableContainer = document.getElementById('table-container');
 
       if (mode === 'cards') {
-        cardsBtn.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-2xs transition";
-        tableBtn.className = "px-2.5 py-1 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 transition";
+        cardsBtn.className = "btn-tactile px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-2xs transition";
+        tableBtn.className = "btn-tactile px-2.5 py-1 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 transition";
         cardsContainer.classList.remove('hidden');
         tableContainer.classList.add('hidden');
+        showToast('Switched to Cards view', 'info', 1200);
       } else {
-        tableBtn.className = "px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-2xs transition";
-        cardsBtn.className = "px-2.5 py-1 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 transition";
+        tableBtn.className = "btn-tactile px-2.5 py-1 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-2xs transition";
+        cardsBtn.className = "btn-tactile px-2.5 py-1 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 transition";
         tableContainer.classList.remove('hidden');
         cardsContainer.classList.add('hidden');
+        showToast('Switched to Table view', 'info', 1200);
       }
     }
 
+    // Load Stats and Update Counters
     async function loadStats() {
       try {
         const res = await fetch('/api/stats');
@@ -359,11 +551,25 @@
         document.getElementById('stat-phones').innerText = data.with_phone || 0;
         document.getElementById('stat-linkedin').innerText = data.with_linkedin || 0;
         document.getElementById('stat-countries').innerText = data.country_count || 0;
+
+        if (data.countries && Array.isArray(data.countries)) {
+          availableCountries = data.countries;
+        }
+
+        // Update Pill Counts
+        const services = data.services || {};
+        document.getElementById('label-all').innerText = `All (${data.total_leads || 0})`;
+        document.getElementById('label-Chatbots').innerText = `Chatbots (${services['Chatbots'] || 0})`;
+        document.getElementById('label-Web').innerText = `Web Dev (${services['Web Development'] || 0})`;
+        document.getElementById('label-App').innerText = `Mobile Apps (${services['App Development'] || 0})`;
+        document.getElementById('label-Auto').innerText = `Automation (${services['Automation'] || 0})`;
+        document.getElementById('label-Pipe').innerText = `Pipelines (${services['Custom Pipelines'] || 0})`;
       } catch (e) {
         console.error("Stats load error", e);
       }
     }
 
+    // Service Filter Pills
     function setServiceFilter(svc) {
       selectedServiceFilter = svc;
       const pills = {
@@ -379,20 +585,173 @@
         const el = document.getElementById(id);
         if (!el) return;
         if (key === svc) {
-          el.className = "px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-white transition";
+          el.className = "filter-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 text-white transition";
         } else {
-          el.className = "px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition";
+          el.className = "filter-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition";
         }
       });
+
+      showToast(svc ? `Filter applied: ${svc}` : 'Showing all opportunities', 'info', 1400);
+      loadLeads();
+    }
+
+    // Interactive KPI Metric Power Filters
+    function toggleKpiFilter(type) {
+      // Remove active states
+      ['kpi-total', 'kpi-emails', 'kpi-phones', 'kpi-linkedin'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active-kpi');
+      });
+
+      if (type === 'all') {
+        filterEmailOnly = false;
+        filterPhoneOnly = false;
+        filterLinkedinOnly = false;
+        document.getElementById('kpi-total').classList.add('active-kpi');
+        showToast('Showing all stored prospects', 'info');
+      } else if (type === 'email') {
+        filterEmailOnly = !filterEmailOnly;
+        filterPhoneOnly = false;
+        filterLinkedinOnly = false;
+        if (filterEmailOnly) {
+          document.getElementById('kpi-emails').classList.add('active-kpi');
+          showToast('Filtered: Prospects with verified inboxes', 'info');
+        } else {
+          showToast('Inbox filter removed', 'info');
+        }
+      } else if (type === 'phone') {
+        filterPhoneOnly = !filterPhoneOnly;
+        filterEmailOnly = false;
+        filterLinkedinOnly = false;
+        if (filterPhoneOnly) {
+          document.getElementById('kpi-phones').classList.add('active-kpi');
+          showToast('Filtered: Prospects with direct phones', 'info');
+        } else {
+          showToast('Phone filter removed', 'info');
+        }
+      } else if (type === 'linkedin') {
+        filterLinkedinOnly = !filterLinkedinOnly;
+        filterEmailOnly = false;
+        filterPhoneOnly = false;
+        if (filterLinkedinOnly) {
+          document.getElementById('kpi-linkedin').classList.add('active-kpi');
+          showToast('Filtered: Prospects with LinkedIn profiles', 'info');
+        } else {
+          showToast('LinkedIn filter removed', 'info');
+        }
+      }
 
       loadLeads();
     }
 
+    // Cycle Country Filter
+    function cycleCountryFilter() {
+      const kpi = document.getElementById('kpi-countries');
+      const tag = document.getElementById('country-active-tag');
+      const sub = document.getElementById('country-subtitle');
+
+      if (!availableCountries || availableCountries.length === 0) {
+        showToast('No country breakdown available yet', 'info');
+        return;
+      }
+
+      if (!selectedCountryFilter) {
+        selectedCountryFilter = availableCountries[0];
+      } else {
+        const idx = availableCountries.indexOf(selectedCountryFilter);
+        if (idx === -1 || idx === availableCountries.length - 1) {
+          selectedCountryFilter = '';
+        } else {
+          selectedCountryFilter = availableCountries[idx + 1];
+        }
+      }
+
+      if (selectedCountryFilter) {
+        kpi.classList.add('active-kpi');
+        tag.innerText = selectedCountryFilter;
+        tag.classList.remove('opacity-0');
+        sub.innerText = `Filtered: ${selectedCountryFilter}`;
+        showToast(`Filtered by territory: ${selectedCountryFilter}`, 'info');
+      } else {
+        kpi.classList.remove('active-kpi');
+        tag.innerText = 'Cycle';
+        tag.classList.add('opacity-0');
+        sub.innerText = 'India, US, UK, Global';
+        showToast('Territory filter cleared', 'info');
+      }
+
+      loadLeads();
+    }
+
+    // Reset All Filters
+    function resetAllFilters() {
+      selectedServiceFilter = '';
+      selectedCountryFilter = '';
+      filterEmailOnly = false;
+      filterPhoneOnly = false;
+      filterLinkedinOnly = false;
+      document.getElementById('filter-search').value = '';
+      document.getElementById('clear-search-btn').classList.add('hidden');
+
+      ['kpi-total', 'kpi-emails', 'kpi-phones', 'kpi-linkedin', 'kpi-countries'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active-kpi');
+      });
+
+      document.getElementById('country-active-tag').innerText = 'Cycle';
+      document.getElementById('country-active-tag').classList.add('opacity-0');
+      document.getElementById('country-subtitle').innerText = 'India, US, UK, Global';
+
+      setServiceFilter('');
+      showToast('All filters reset • Showing full warehouse', 'info');
+    }
+
+    // Search Input Controls
+    function handleSearchInput() {
+      const val = document.getElementById('filter-search').value;
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (val.trim()) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      clearTimeout(searchDebounceTimeout);
+      searchDebounceTimeout = setTimeout(loadLeads, 250);
+    }
+
+    function clearSearchInput() {
+      document.getElementById('filter-search').value = '';
+      document.getElementById('clear-search-btn').classList.add('hidden');
+      loadLeads();
+      showToast('Search query cleared', 'info', 1200);
+    }
+
+    // Header Refresh Button
+    async function handleRefreshClick() {
+      const icon = document.getElementById('refresh-icon');
+      const btn = document.getElementById('refresh-btn');
+      icon.classList.add('fa-spin');
+      btn.disabled = true;
+
+      await loadAllData();
+
+      setTimeout(() => {
+        icon.classList.remove('fa-spin');
+        btn.disabled = false;
+        showToast(`Refreshed data (${currentLeads.length} leads loaded)`, 'success');
+      }, 500);
+    }
+
+    // Load Leads with Real-Time Filtering
     async function loadLeads() {
       const search = document.getElementById('filter-search').value;
       const params = new URLSearchParams({
         search: search,
-        service_match: selectedServiceFilter
+        service_match: selectedServiceFilter,
+        country: selectedCountryFilter,
+        has_email: filterEmailOnly,
+        has_phone: filterPhoneOnly,
+        has_linkedin: filterLinkedinOnly
       });
 
       try {
@@ -402,12 +761,8 @@
         renderAllViews(currentLeads);
       } catch (e) {
         console.error("Leads load error", e);
+        showToast('Error loading leads', 'error');
       }
-    }
-
-    function debounceLoadLeads() {
-      clearTimeout(searchDebounceTimeout);
-      searchDebounceTimeout = setTimeout(loadLeads, 300);
     }
 
     function renderAllViews(leads) {
@@ -419,12 +774,51 @@
         emptyState.classList.remove('hidden');
         cardsContainer.innerHTML = '';
         tableBody.innerHTML = '';
+        
+        const titleEl = document.getElementById('empty-state-title');
+        const descEl = document.getElementById('empty-state-desc');
+        if (selectedServiceFilter) {
+          titleEl.innerText = `No leads found for ${selectedServiceFilter}`;
+          descEl.innerText = `Click "Harvest Leads" to start an autonomous scan for ${selectedServiceFilter}.`;
+        } else {
+          titleEl.innerText = 'No matching prospects found';
+          descEl.innerText = 'Harvest fresh leads or adjust your active search filters.';
+        }
         return;
       }
 
       emptyState.classList.add('hidden');
       renderCards(leads);
       renderTable(leads);
+    }
+
+    // Direct Action Handlers (Email, Phone, WhatsApp)
+    function handleEmailClick(event, email, companyName, leadId) {
+      event.stopPropagation();
+      event.preventDefault();
+      copyToClipboard(email, `Copied email: ${email}`);
+      const lead = currentLeads.find(l => l.id === leadId);
+      const pitch = lead ? (lead.confident_pitch || lead.pitch_hook || '') : '';
+      const subject = `Quick idea for ${companyName}`;
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(pitch)}`;
+      window.open(gmailUrl, '_blank');
+    }
+
+    function handlePhoneClick(event, phone) {
+      event.stopPropagation();
+      event.preventDefault();
+      copyToClipboard(phone, `Copied phone: ${phone}`);
+      window.location.href = `tel:${phone}`;
+    }
+
+    function handleWhatsAppClick(event, digits, leadId) {
+      event.stopPropagation();
+      event.preventDefault();
+      const lead = currentLeads.find(l => l.id === leadId);
+      const pitch = lead ? (lead.confident_pitch || lead.pitch_hook || '') : '';
+      const waUrl = `https://wa.me/${digits}?text=${encodeURIComponent(pitch)}`;
+      showToast('Opening WhatsApp with pre-filled pitch...', 'info');
+      window.open(waUrl, '_blank');
     }
 
     // Render Minimalist Cards View
@@ -435,49 +829,61 @@
         const phones = lead.phones ? lead.phones.split(',').map(p => p.trim()).filter(Boolean) : [];
         const websiteUrl = lead.website && lead.website.startsWith('http') ? lead.website : `https://${lead.domain}`;
         const contactName = lead.contact_name ? lead.contact_name : 'Founding & Leadership Team';
+        const safeCompany = (lead.company_name || lead.domain).replace(/'/g, "\\'");
 
-        // Contact buttons (Subtle, Muted Palette)
+        // Contact action triggers
         let contactButtons = [];
         if (emails.length > 0) {
           contactButtons.push(`
-            <a href="mailto:${emails[0]}" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition">
+            <button onclick="handleEmailClick(event, '${emails[0]}', '${safeCompany}', ${lead.id})" 
+                    class="btn-tactile px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition" 
+                    title="Click to copy & open in Gmail">
               <i class="fa-regular fa-envelope text-[10px] text-slate-500"></i> ${emails[0]}
-            </a>
+            </button>
           `);
         }
         if (phones.length > 0) {
           const rawNum = phones[0];
           const digits = rawNum.replace(/\D/g, '');
           contactButtons.push(`
-            <a href="tel:${rawNum}" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition">
+            <button onclick="handlePhoneClick(event, '${rawNum}')" 
+                    class="btn-tactile px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition" 
+                    title="Click to copy & call">
               <i class="fa-solid fa-phone text-[10px] text-slate-500"></i> ${rawNum}
-            </a>
+            </button>
           `);
           if (digits.length >= 10) {
             contactButtons.push(`
-              <a href="https://wa.me/${digits}" target="_blank" rel="noopener noreferrer" class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition">
+              <button onclick="handleWhatsAppClick(event, '${digits}', ${lead.id})" 
+                      class="btn-tactile px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition" 
+                      title="Open WhatsApp chat with prefilled pitch">
                 <i class="fa-brands fa-whatsapp text-xs text-slate-500"></i> WhatsApp
-              </a>
+              </button>
             `);
           }
         }
 
         return `
-          <div class="card-minimal p-4.5 rounded-xl flex flex-col justify-between space-y-3.5 shadow-2xs">
+          <div id="lead-card-${lead.id}" class="card-minimal p-4.5 rounded-xl flex flex-col justify-between space-y-3.5 shadow-2xs">
             
             <!-- Card Header -->
             <div class="space-y-2">
               <div class="flex items-center justify-between gap-2">
-                <span class="px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-slate-100 text-slate-700 border border-slate-200">
+                <button onclick="setServiceFilter('${lead.service_match}')" 
+                        class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition" 
+                        title="Click to filter by ${lead.service_match}">
                   ${lead.service_match || 'Digital'}
-                </span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 text-slate-500 border border-slate-200">
+                </button>
+                <button onclick="filterByCardCountry('${lead.country}')" 
+                        class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200 transition" 
+                        title="Click to filter by ${lead.country || 'Global'}">
                   ${lead.country || 'Global'}
-                </span>
+                </button>
               </div>
 
               <div>
-                <a href="${websiteUrl}" target="_blank" rel="noopener noreferrer" class="text-sm font-semibold text-slate-900 hover:text-slate-600 transition inline-flex items-center gap-1.5 group">
+                <a href="${websiteUrl}" target="_blank" rel="noopener noreferrer" 
+                   class="btn-tactile text-sm font-semibold text-slate-900 hover:text-slate-600 transition inline-flex items-center gap-1.5 group">
                   <span>${lead.company_name || lead.domain}</span>
                   <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400 group-hover:text-slate-600 transition"></i>
                 </a>
@@ -508,11 +914,14 @@
               </div>
 
               <div class="flex items-center gap-2">
-                <button onclick="openPitchModal(${lead.id})" class="flex-1 py-1.5 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-2xs transition">
+                <button onclick="openPitchModal(${lead.id})" 
+                        class="btn-tactile flex-1 py-1.5 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium flex items-center justify-center gap-1.5 shadow-2xs transition">
                   <span>Review Proposition</span>
                   <i class="fa-solid fa-arrow-right text-[10px] text-slate-300"></i>
                 </button>
-                <button onclick="deleteLead(${lead.id})" class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 transition" title="Dismiss">
+                <button onclick="deleteLead(${lead.id})" 
+                        class="btn-tactile p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 transition" 
+                        title="Dismiss Lead">
                   <i class="fa-regular fa-trash-can text-xs"></i>
                 </button>
               </div>
@@ -530,18 +939,24 @@
         const emails = lead.emails ? lead.emails.split(',').map(e => e.trim()).filter(Boolean) : [];
         const phones = lead.phones ? lead.phones.split(',').map(p => p.trim()).filter(Boolean) : [];
         const websiteUrl = lead.website && lead.website.startsWith('http') ? lead.website : `https://${lead.domain}`;
+        const safeCompany = (lead.company_name || lead.domain).replace(/'/g, "\\'");
 
         return `
-          <tr class="hover:bg-slate-50/70 transition group">
+          <tr id="lead-row-${lead.id}" class="hover:bg-slate-50/70 transition group">
             <td class="py-3 px-4">
-              <a href="${websiteUrl}" target="_blank" rel="noopener noreferrer" class="font-medium text-slate-900 hover:underline transition inline-flex items-center gap-1">
+              <a href="${websiteUrl}" target="_blank" rel="noopener noreferrer" 
+                 class="font-medium text-slate-900 hover:underline transition inline-flex items-center gap-1">
                 ${lead.company_name || lead.domain}
                 <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-slate-400"></i>
               </a>
               <div class="text-[10px] text-slate-500 font-mono">${lead.domain}</div>
             </td>
             <td class="py-3 px-4 font-mono text-[11px] text-slate-700">
-              ${lead.service_match || 'General Dev'}
+              <button onclick="setServiceFilter('${lead.service_match}')" 
+                      class="btn-tactile hover:underline text-left text-slate-800" 
+                      title="Filter by ${lead.service_match}">
+                ${lead.service_match || 'General Dev'}
+              </button>
             </td>
             <td class="py-3 px-4 max-w-xs text-slate-600 text-xs">
               ${lead.where_they_are_good || '-'}
@@ -549,13 +964,32 @@
             <td class="py-3 px-4 max-w-xs text-slate-700 text-xs font-medium">
               ${lead.where_they_are_lacking || '-'}
             </td>
-            <td class="py-3 px-4 font-mono text-[11px]">
-              ${emails.length > 0 ? `<div class="text-slate-800">${emails[0]}</div>` : ''}
-              ${phones.length > 0 ? `<div class="text-slate-600">${phones[0]}</div>` : ''}
+            <td class="py-3 px-4 font-mono text-[11px] space-y-1">
+              ${emails.length > 0 ? `
+                <button onclick="handleEmailClick(event, '${emails[0]}', '${safeCompany}', ${lead.id})" 
+                        class="btn-tactile text-slate-800 hover:text-slate-900 hover:underline flex items-center gap-1" 
+                        title="Click to copy & email">
+                  <i class="fa-regular fa-envelope text-[9px] text-slate-400"></i> ${emails[0]}
+                </button>
+              ` : ''}
+              ${phones.length > 0 ? `
+                <button onclick="handlePhoneClick(event, '${phones[0]}')" 
+                        class="btn-tactile text-slate-600 hover:text-slate-900 hover:underline flex items-center gap-1" 
+                        title="Click to copy phone">
+                  <i class="fa-solid fa-phone text-[9px] text-slate-400"></i> ${phones[0]}
+                </button>
+              ` : ''}
+              ${emails.length === 0 && phones.length === 0 ? '<span class="text-slate-400 italic">None</span>' : ''}
             </td>
-            <td class="py-3 px-4 text-right">
-              <button onclick="openPitchModal(${lead.id})" class="px-2.5 py-1 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition shadow-2xs">
+            <td class="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
+              <button onclick="openPitchModal(${lead.id})" 
+                      class="btn-tactile px-2.5 py-1 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition shadow-2xs">
                 Proposition
+              </button>
+              <button onclick="deleteLead(${lead.id})" 
+                      class="btn-tactile p-1 rounded-md border border-slate-200 text-slate-400 hover:text-rose-600 transition" 
+                      title="Dismiss">
+                <i class="fa-regular fa-trash-can text-xs"></i>
               </button>
             </td>
           </tr>
@@ -563,7 +997,14 @@
       }).join('');
     }
 
-    // Open Modal
+    function filterByCardCountry(country) {
+      if (!country) return;
+      selectedCountryFilter = country;
+      showToast(`Filtered by territory: ${country}`, 'info');
+      loadLeads();
+    }
+
+    // Modal Operations
     function openPitchModal(id) {
       const lead = currentLeads.find(l => l.id === id);
       if (!lead) return;
@@ -582,7 +1023,8 @@
       document.getElementById('modal-where-good').innerText = lead.where_they_are_good || 'Clear market presence.';
       document.getElementById('modal-where-lacking').innerText = lead.where_they_are_lacking || lead.opportunity_type || 'Bottleneck identified.';
 
-      document.getElementById('modal-pitch-textarea').value = lead.confident_pitch || lead.pitch_hook || '';
+      const pitch = lead.confident_pitch || lead.pitch_hook || '';
+      document.getElementById('modal-pitch-textarea').value = pitch;
 
       // Inboxes
       const emailsContainer = document.getElementById('modal-emails');
@@ -591,7 +1033,10 @@
         emailsContainer.innerHTML = emails.map(e => `
           <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200">
             <span class="text-slate-800 text-xs">${e}</span>
-            <a href="mailto:${e}" class="text-[11px] text-slate-600 hover:text-slate-900 font-medium">Compose ↗</a>
+            <div class="flex items-center gap-1.5">
+              <button onclick="copyToClipboard('${e}', 'Copied email: ${e}')" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200 hover:bg-slate-100 text-slate-700 transition">Copy</button>
+              <a href="mailto:${e}" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-900 text-white hover:bg-slate-800 transition">Compose ↗</a>
+            </div>
           </div>
         `).join('');
       } else {
@@ -607,9 +1052,10 @@
           return `
             <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200">
               <span class="text-slate-800 text-xs">${p}</span>
-              <div class="flex items-center gap-2">
-                <a href="tel:${p}" class="text-[11px] text-slate-600 hover:text-slate-900 font-medium">Call</a>
-                ${digits.length >= 10 ? `<a href="https://wa.me/${digits}" target="_blank" rel="noopener noreferrer" class="text-[11px] text-slate-600 hover:text-slate-900 font-medium">WhatsApp ↗</a>` : ''}
+              <div class="flex items-center gap-1.5">
+                <button onclick="copyToClipboard('${p}', 'Copied phone: ${p}')" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200 hover:bg-slate-100 text-slate-700 transition">Copy</button>
+                <a href="tel:${p}" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200 hover:bg-slate-100 text-slate-700 transition">Call</a>
+                ${digits.length >= 10 ? `<button onclick="handleWhatsAppClick(event, '${digits}', ${lead.id})" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-900 text-white hover:bg-slate-800 transition">WhatsApp ↗</button>` : ''}
               </div>
             </div>
           `;
@@ -626,52 +1072,137 @@
       activeModalLead = null;
     }
 
+    // Modal Backdrop Click & Escape Key Listener
+    document.getElementById('pitch-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'pitch-modal') {
+        closeModal();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+
+    // Copy Pitch from Modal
     function copyModalPitch() {
       if (!activeModalLead) return;
       const text = document.getElementById('modal-pitch-textarea').value;
-      navigator.clipboard.writeText(text);
+      copyToClipboard(text, 'Proposition copied to clipboard!');
       const btn = document.getElementById('copy-modal-pitch-btn');
-      btn.innerHTML = `<i class="fa-solid fa-check text-xs"></i> Copied`;
+      btn.innerHTML = `<i class="fa-solid fa-check text-xs"></i> <span>Copied</span>`;
       setTimeout(() => {
-        btn.innerHTML = `<i class="fa-regular fa-copy text-xs"></i> Copy Text`;
+        btn.innerHTML = `<i class="fa-regular fa-copy text-xs"></i> <span>Copy Text</span>`;
       }, 2000);
     }
 
+    // Open in Gmail Web
+    function openGmailWebFromModal() {
+      if (!activeModalLead) return;
+      const emails = activeModalLead.emails ? activeModalLead.emails.split(',').map(e => e.trim()).filter(Boolean) : [];
+      const recipient = emails.length > 0 ? emails[0] : '';
+      const subject = `Quick question regarding ${activeModalLead.company_name || activeModalLead.domain}`;
+      const body = document.getElementById('modal-pitch-textarea').value;
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipient)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      showToast('Opening Gmail compose window...', 'info');
+      window.open(gmailUrl, '_blank');
+    }
+
+    function filterFromModalService() {
+      if (!activeModalLead) return;
+      const svc = activeModalLead.service_match;
+      closeModal();
+      setServiceFilter(svc);
+    }
+
+    function filterFromModalCountry() {
+      if (!activeModalLead) return;
+      const c = activeModalLead.country;
+      closeModal();
+      selectedCountryFilter = c;
+      loadLeads();
+      showToast(`Filtered by territory: ${c}`, 'info');
+    }
+
+    async function deleteActiveModalLead() {
+      if (!activeModalLead) return;
+      const id = activeModalLead.id;
+      closeModal();
+      await deleteLead(id);
+    }
+
+    // Delete / Dismiss Lead
     async function deleteLead(id) {
-      if (!confirm("Remove this prospect from your pipeline?")) return;
-      await fetch(`/api/leads/${id}`, { method: 'DELETE' });
-      loadAllData();
+      try {
+        const res = await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast('Prospect dismissed from pipeline', 'info');
+          // Smooth fade removal from DOM
+          const cardEl = document.getElementById(`lead-card-${id}`);
+          if (cardEl) {
+            cardEl.style.opacity = '0';
+            cardEl.style.transform = 'scale(0.95)';
+            setTimeout(() => cardEl.remove(), 200);
+          }
+          const rowEl = document.getElementById(`lead-row-${id}`);
+          if (rowEl) {
+            rowEl.style.opacity = '0';
+            setTimeout(() => rowEl.remove(), 200);
+          }
+          loadStats();
+          currentLeads = currentLeads.filter(l => l.id !== id);
+        }
+      } catch (err) {
+        showToast('Error removing lead: ' + err, 'error');
+      }
     }
 
     // Trigger Autonomous Cycle
     async function triggerAutonomousCycle() {
+      const btn = document.getElementById('sweep-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Harvesting...</span>`;
+
       try {
         const res = await fetch('/api/autopilot/run-now?batch_size=15', { method: 'POST' });
         const data = await res.json();
         if (res.ok) {
+          showToast('Harvest cycle active — ingesting opportunities...', 'success');
           startLivePolling();
         } else {
-          alert(data.message || "Sweep already in progress.");
+          showToast(data.message || "Sweep already in progress.", 'info');
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-arrow-down-long text-xs"></i> <span>Harvest 15 Leads</span>`;
         }
       } catch (err) {
-        alert("Error initiating sweep: " + err);
+        showToast("Error initiating sweep: " + err, 'error');
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-arrow-down-long text-xs"></i> <span>Harvest 15 Leads</span>`;
       }
     }
 
     // Self-Healing Protocol
     async function triggerSelfHeal() {
       const btn = document.getElementById('self-heal-btn');
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> Diagnosing...`;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Diagnosing...</span>`;
+
       try {
         const res = await fetch('/api/self-heal', { method: 'POST' });
         const data = await res.json();
-        loadAllData();
-        btn.innerHTML = `<i class="fa-solid fa-check text-xs"></i> Healed (${data.repaired_records || 0})`;
+        await loadAllData();
+        const repaired = data.repaired_records || 0;
+        btn.innerHTML = `<i class="fa-solid fa-check text-xs"></i> <span>Healed (${repaired})</span>`;
+        showToast(`Self-heal complete: ${repaired} records verified!`, 'success');
         setTimeout(() => {
-          btn.innerHTML = `<i class="fa-solid fa-shield-halved text-xs text-slate-500"></i> Self-Heal`;
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-shield-halved text-xs text-slate-500"></i> <span>Self-Heal</span>`;
         }, 3000);
       } catch (err) {
-        btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xs text-rose-500"></i> Error`;
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-xs text-rose-500"></i> <span>Error</span>`;
+        showToast('Self-healing error encountered', 'error');
       }
     }
 
@@ -681,6 +1212,18 @@
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = setInterval(checkJobStatus, 1000);
       checkJobStatus();
+    }
+
+    function toggleTerminalLogs() {
+      const term = document.getElementById('terminal-logs');
+      const icon = document.getElementById('toggle-logs-icon');
+      if (term.classList.contains('hidden')) {
+        term.classList.remove('hidden');
+        icon.className = "fa-solid fa-chevron-up";
+      } else {
+        term.classList.add('hidden');
+        icon.className = "fa-solid fa-chevron-down";
+      }
     }
 
     async function checkJobStatus() {
@@ -698,24 +1241,30 @@
           term.scrollTop = term.scrollHeight;
         }
 
-        loadStats();
-        loadLeads();
-
         if (!state.is_running) {
-          clearInterval(pollInterval);
-          pollInterval = null;
-          setTimeout(() => {
-            document.getElementById('live-progress-container').classList.add('hidden');
-          }, 3000);
+          const btn = document.getElementById('sweep-btn');
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-arrow-down-long text-xs"></i> <span>Harvest 15 Leads</span>`;
+          }
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+            showToast('Harvest cycle completed!', 'success');
+            loadAllData();
+            setTimeout(() => {
+              document.getElementById('live-progress-container').classList.add('hidden');
+            }, 3000);
+          }
         }
       } catch (e) {
         console.error("Job status check error", e);
       }
     }
 
-    function loadAllData() {
-      loadStats();
-      loadLeads();
+    async function loadAllData() {
+      await loadStats();
+      await loadLeads();
     }
 
     window.onload = () => {

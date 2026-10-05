@@ -80,6 +80,8 @@ async def api_get_leads(
     country: str = Query("", description="Country filter"),
     service_match: str = Query("", description="Filter by service match"),
     has_email: bool = Query(False, description="Filter leads with email only"),
+    has_phone: bool = Query(False, description="Filter leads with phone only"),
+    has_linkedin: bool = Query(False, description="Filter leads with linkedin only"),
     status: str = Query("", description="Lead status filter"),
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0)
@@ -89,6 +91,8 @@ async def api_get_leads(
         country=country,
         service_match=service_match,
         has_email=has_email,
+        has_phone=has_phone,
+        has_linkedin=has_linkedin,
         status=status,
         limit=limit,
         offset=offset

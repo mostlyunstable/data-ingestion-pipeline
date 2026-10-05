@@ -219,7 +219,7 @@ def save_or_update_lead(lead_data: dict) -> bool:
     conn.close()
     return is_new
 
-def get_leads(search="", country="", has_email=False, service_match="", status="", limit=100, offset=0):
+def get_leads(search="", country="", has_email=False, has_phone=False, has_linkedin=False, service_match="", status="", limit=100, offset=0):
     conn = get_db()
     cursor = conn.cursor()
 
@@ -241,6 +241,12 @@ def get_leads(search="", country="", has_email=False, service_match="", status="
 
     if has_email:
         query += " AND emails != '' AND emails IS NOT NULL"
+
+    if has_phone:
+        query += " AND phones != '' AND phones IS NOT NULL"
+
+    if has_linkedin:
+        query += " AND ((linkedin_company != '' AND linkedin_company IS NOT NULL) OR (linkedin_profiles != '' AND linkedin_profiles IS NOT NULL))"
 
     if status:
         query += " AND status = ?"
