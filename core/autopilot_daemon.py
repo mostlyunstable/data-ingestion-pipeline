@@ -35,7 +35,8 @@ class AutopilotDaemon:
             return
 
         job_state.log("⚡ [Autopilot] Commencing autonomous prospect discovery...")
-        targets = autopilot_manager.get_next_target_batch(batch_size=batch_size)
+        candidates_needed = max(batch_size, int(batch_size * 1.5))
+        targets = autopilot_manager.get_next_target_batch(batch_size=candidates_needed)
 
         if not targets:
             job_state.log("⚠️ [Autopilot] No new targets discovered in current cycle.")

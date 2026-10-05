@@ -1206,7 +1206,7 @@
             <span class="text-slate-800 text-xs truncate max-w-[200px]">${e}</span>
             <div class="flex items-center gap-1.5 shrink-0">
               <button onclick="copyToClipboard('${e}', 'Copied email: ${e}')" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200 hover:bg-slate-100 text-slate-700 transition">Copy</button>
-              <button onclick="openGmailWebFromModal()" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-900 text-white hover:bg-slate-800 transition">Compose ↗</button>
+              <button onclick="openGmailWebFromModal('${e}')" class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-900 text-white hover:bg-slate-800 transition">Compose ↗</button>
             </div>
           </div>
         `).join('');
@@ -1270,10 +1270,10 @@
     }
 
     // Open in Gmail Web
-    function openGmailWebFromModal() {
+    function openGmailWebFromModal(targetEmail) {
       if (!activeModalLead) return;
       const emails = activeModalLead.emails ? activeModalLead.emails.split(',').map(e => e.trim()).filter(Boolean) : [];
-      const recipient = emails.length > 0 ? emails[0] : '';
+      const recipient = targetEmail || (emails.length > 0 ? emails[0] : '');
       const subject = `Quick question regarding ${activeModalLead.company_name || activeModalLead.domain}`;
       const body = document.getElementById('modal-pitch-textarea').value;
       const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipient)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
