@@ -18,6 +18,12 @@ from extractors.tech_detector import detect_tech_stack
 from transformers.opportunity_auditor import audit_business_for_services
 from transformers.cleaner import clean_company_brand_name
 
+try:
+    from playwright.async_api import async_playwright
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+
 def normalize_url(raw_url: str) -> str:
     """Ensures URL starts with http(s):// and is clean."""
     url = raw_url.strip()
@@ -35,6 +41,71 @@ def extract_domain(url: str) -> str:
         return domain
     except Exception:
         return url.lower()
+
+def is_spa_or_js_rendered(html: str) -> bool:
+    """
+    Detects if HTML is an unhydrated JavaScript client-side SPA or blocked page needing browser rendering.
+    """
+    if not html or len(html.strip()) < 100:
+        return True
+    lower_html = html.lower()
+    if "just a moment..." in lower_html and "cloudflare" in lower_html:
+        return True
+    if "enable javascript to continue" in lower_html or "please turn javascript on" in lower_html:
+        return True
+    if "<noscript>you need to enable javascript" in lower_html:
+        return True
+    spa_markers = [
+        '<div id="root"></div>', '<div id="root"> </div>',
+        '<div id="app"></div>', '<div id="app"> </div>',
+        '<div id="__next"></div>', '<div id="__next"> </div>',
+        '<app-root></app-root>', '<app-root> </app-root>'
+    ]
+    if any(m in lower_html for m in spa_markers):
+        clean = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', html, flags=re.DOTALL | re.IGNORECASE)
+        clean = re.sub(r'<[^>]+>', ' ', clean)
+        visible_text = ' '.join(clean.split())
+        if len(visible_text) < 250:
+            return True
+    return False
+
+async def fetch_html_playwright(url: str, timeout_ms: int = 12000) -> str:
+    """
+    Renders JavaScript client-side single page applications (SPAs) using headless Chromium.
+    Safely times out and handles environment limits gracefully.
+    """
+    if not PLAYWRIGHT_AVAILABLE:
+        return ""
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                    "--disable-blink-features=AutomationControlled"
+                ]
+            )
+            context = await browser.new_context(
+                user_agent=random.choice(USER_AGENTS),
+                viewport={"width": 1280, "height": 800},
+                java_script_enabled=True,
+                ignore_https_errors=True
+            )
+            page = await context.new_page()
+            try:
+                await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+                await page.wait_for_timeout(1500)
+                content = await page.content()
+                await browser.close()
+                return content[:2_000_000]
+            except Exception:
+                await browser.close()
+                return ""
+    except Exception:
+        return ""
 
 async def fetch_html(session: aiohttp.ClientSession, url: str) -> str:
     """Fetches HTML with stealth headers and SSL ignore."""
@@ -95,6 +166,12 @@ async def crawl_single_company(target_url_or_domain: str, niche: str = "", sourc
             # Try http fallback
             home_html = await fetch_html(session, f"http://{domain}")
 
+        # Headless Browser SPA Fallback (renders client-side JS / React / Vue / blocked shells)
+        if is_spa_or_js_rendered(home_html):
+            pw_html = await fetch_html_playwright(result["website"])
+            if pw_html and len(pw_html) > len(home_html):
+                home_html = pw_html
+
         if not home_html:
             return {}
 
@@ -144,11 +221,17 @@ async def crawl_single_company(target_url_or_domain: str, niche: str = "", sourc
         combined_text = home_soup.get_text()
 
         for s_url, s_html in zip(target_subpages, subpage_results):
-            if isinstance(s_html, str) and s_html:
-                s_soup = BeautifulSoup(s_html, "html.parser")
+            sub_content = s_html if isinstance(s_html, str) else ""
+            if is_spa_or_js_rendered(sub_content):
+                pw_sub = await fetch_html_playwright(s_url, timeout_ms=8000)
+                if pw_sub and len(pw_sub) > len(sub_content):
+                    sub_content = pw_sub
+
+            if sub_content:
+                s_soup = BeautifulSoup(sub_content, "html.parser")
                 combined_text += " " + s_soup.get_text()
 
-                result["emails"].update(extract_emails(s_html, s_soup))
+                result["emails"].update(extract_emails(sub_content, s_soup))
                 is_legal = any(k in s_url.lower() for k in ["privacy", "terms", "legal", "policy", "compliance"])
                 if not is_legal:
                     result["phones"].update(extract_phones(s_soup.get_text(), s_soup))

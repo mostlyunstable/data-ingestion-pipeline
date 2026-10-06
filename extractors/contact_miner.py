@@ -40,8 +40,74 @@ DUMMY_DOMAIN_ROOTS = {
     "wixpress", "sentry", "cloudflare", "gravatar", "schema"
 }
 
-def clean_email(email: str, company_domain: str = "") -> str:
-    """Validates, unescapes, and cleans an email string."""
+try:
+    import dns.resolver
+    DNS_AVAILABLE = True
+except ImportError:
+    DNS_AVAILABLE = False
+
+COMMON_EMAIL_DOMAINS = {
+    "gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.in", "yahoo.co.uk",
+    "hotmail.com", "outlook.com", "live.com", "msn.com", "icloud.com", "me.com",
+    "proton.me", "protonmail.com", "zoho.com", "zoho.in", "aol.com", "mail.com",
+    "yandex.com", "fastmail.com", "gmx.com", "gmx.net", "rediffmail.com"
+}
+
+_MX_CACHE = {}
+
+def verify_email_domain_mx(domain: str) -> bool:
+    """
+    Verifies that a domain has active DNS MX mail routing records or an active A record.
+    Filters out RFC 7505 null MX records ('.'), NXDOMAIN non-existent domains, and dead hosts.
+    Results are cached in memory for sub-millisecond repeat queries.
+    """
+    if not domain:
+        return False
+    domain = domain.strip().lower()
+    if '.' not in domain:
+        return False
+    if domain in COMMON_EMAIL_DOMAINS:
+        return True
+    if domain in _MX_CACHE:
+        return _MX_CACHE[domain]
+    if not DNS_AVAILABLE:
+        return True
+
+    try:
+        resolver = dns.resolver.Resolver()
+        resolver.timeout = 2.0
+        resolver.lifetime = 2.5
+        try:
+            answers = resolver.resolve(domain, 'MX')
+            valid_mx = [
+                r.exchange.to_text().rstrip('.')
+                for r in answers
+                if r.exchange.to_text().rstrip('.')
+            ]
+            if valid_mx:
+                _MX_CACHE[domain] = True
+                return True
+            else:
+                _MX_CACHE[domain] = False
+                return False
+        except dns.resolver.NoAnswer:
+            try:
+                a_answers = resolver.resolve(domain, 'A')
+                is_valid = len(a_answers) > 0
+                _MX_CACHE[domain] = is_valid
+                return is_valid
+            except Exception:
+                _MX_CACHE[domain] = False
+                return False
+        except dns.resolver.NXDOMAIN:
+            _MX_CACHE[domain] = False
+            return False
+    except Exception:
+        # Transient network or resolver timeout - fail open so valid leads aren't dropped
+        return True
+
+def clean_email(email: str, company_domain: str = "", check_mx: bool = True) -> str:
+    """Validates, unescapes, and cleans an email string, verifying DNS MX deliverability."""
     if not email:
         return ""
     email = email.strip().lower()
@@ -142,6 +208,11 @@ def clean_email(email: str, company_domain: str = "") -> str:
         if cdom.startswith(domain) and len(cdom) == len(domain) + 1 and cdom.endswith('m'):
             domain = cdom
             email = f"{user}@{domain}"
+
+    # Verify domain MX & Mail Server deliverability
+    if check_mx:
+        if not verify_email_domain_mx(domain):
+            return ""
 
     return email
 
