@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniLead Pipeline — Architecture & Operational Documentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      securityLevel: 'loose',
+      flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+    });
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .mermaid {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      overflow-x: auto;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #ffffff; color: #000000; }
+      .mermaid { border: 1px solid #ccc; box-shadow: none; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body class="antialiased">
+
+  <!-- Top Action Bar -->
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 shadow-sm no-print">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-slate-900 flex items-center justify-center text-amber-400 font-black text-lg">⚡</div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight leading-tight">OmniLead Architecture & Operations</h1>
+          <p class="text-xs text-slate-500 font-medium">Autonomous SMB Client & Business Ingestion Engine</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <a href="/api/download-docs?format=markdown" download="OMNILEAD_PIPELINE_ARCHITECTURE.md" class="inline-flex items-center space-x-2 text-xs font-semibold px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-300 transition">
+          <i class="fa-solid fa-file-arrow-down"></i>
+          <span>Download .MD</span>
+        </a>
+        <button onclick="window.print()" class="inline-flex items-center space-x-2 text-xs font-semibold px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-sm transition">
+          <i class="fa-solid fa-print"></i>
+          <span>Print / Save PDF</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-10 space-y-12">
+
+    <!-- Hero Header -->
+    <section class="border-b border-slate-200 pb-8">
+      <div class="inline-block text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded mb-3">Technical Specification</div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight leading-tight mb-3">OmniLead System Architecture & Lead Pipeline Documentation</h1>
+      <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+        Comprehensive technical documentation detailing lead sourcing channels, multi-engine traversal, anti-noise filtering, deep DOM hydration, DNS MX deliverability verification, and opportunity auditing.
+      </p>
+    </section>
+
+    <!-- 1. Core Philosophy -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">1. Core Philosophy & Target Profile</h2>
+      <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
+        <p class="text-sm text-slate-700 leading-relaxed font-semibold">
+          OmniLead is engineered around a single mandate: <span class="text-indigo-600">No Generic Leads. Only Call-Bookable Potential Clients.</span>
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div class="bg-rose-50/50 border border-rose-200 rounded-lg p-4">
+            <h3 class="text-xs font-bold uppercase text-rose-800 tracking-wider mb-2"><i class="fa-solid fa-xmark mr-1"></i> What Generic Scrapers Do</h3>
+            <ul class="text-xs text-rose-900 space-y-2 list-disc list-inside">
+              <li>Scrape massive directories (Justdial, Yelp, Clutch, Practo) yielding outdated generic support emails.</li>
+              <li>Target enterprise giants (Amazon, Tata, Microsoft) with multi-month procurement red tape where cold outreach fails.</li>
+              <li>Collect dead, invalid domains causing email bounce rates that ruin sender domain reputation.</li>
+            </ul>
+          </div>
+          <div class="bg-emerald-50/50 border border-emerald-200 rounded-lg p-4">
+            <h3 class="text-xs font-bold uppercase text-emerald-800 tracking-wider mb-2"><i class="fa-solid fa-check mr-1"></i> The OmniLead Approach</h3>
+            <ul class="text-xs text-emerald-900 space-y-2 list-disc list-inside">
+              <li>Targets <strong>Boutique SMBs (1 to 50 employees)</strong> where founders, doctors, and partners directly read messages.</li>
+              <li>Pre-audits every website for verified technical bottlenecks (missing WhatsApp bots, legacy CMS lag, no mobile app).</li>
+              <li>Generates bespoke, personalized cold pitches pairing authentic praise with concrete solution offers.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. System Architecture Diagram -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">2. End-to-End System Architecture</h2>
+      <p class="text-sm text-slate-600">The execution flow from multi-channel discovery to filtration, deep crawling, DNS verification, and storage:</p>
+      <div class="mermaid">
+flowchart TD
+    subgraph Sourcing ["1. Sourcing Engine"]
+        SR["Multi-Engine Search Radar"]
+        BM["Rotational Buyer Matrices"]
+        GH["GitHub Org API"]
+        RSS["HN RSS Startup Feed"]
+        SEED["Verified Seed Reservoir"]
+        MAN["Manual File / URL Upload"]
+    end
+
+    subgraph Filtration ["2. Anti-Noise & Deduplication"]
+        DEDUP{"Domain in SQLite?"}
+        BLACK{"In SKIP_DOMAINS?"}
+    end
+
+    subgraph Crawling ["3. Deep Crawl & SPA Hydration"]
+        HTTP["aiohttp Async Fetch (&lt;500ms)"]
+        IS_SPA{"Unhydrated SPA / Blocked?"}
+        PW["Headless Playwright Chromium"]
+        SUBP["Parallel Subpage Discovery"]
+    end
+
+    subgraph MiningAudit ["4. Mining & Intelligence"]
+        CF["Cloudflare Decrypt & Regex"]
+        MX["DNS MX & Mail Server Verification"]
+        PH["Phone & WhatsApp Normalizer"]
+        TECH["Tech Stack Detector"]
+        AUDIT["Opportunity Auditor"]
+    end
+
+    subgraph Persistence ["5. Storage & Dashboard"]
+        QG{"Has Verified Contact?"}
+        DB[("SQLite Database Warehouse")]
+        DASH["FastAPI Control Center"]
+    end
+
+    Sourcing --> DEDUP
+    DEDUP -- "No (New Domain)" --> BLACK
+    DEDUP -- "Yes (Duplicate)" --> DROP1["Drop Duplicate"]
+    BLACK -- "Pass" --> HTTP
+    BLACK -- "Blocked" --> DROP2["Drop Big Tech / Directory"]
+
+    HTTP --> IS_SPA
+    IS_SPA -- "Yes (Empty SPA)" --> PW
+    IS_SPA -- "No (Normal HTML)" --> SUBP
+    PW --> SUBP
+
+    SUBP --> CF
+    CF --> MX
+    MX --> PH
+    PH --> TECH
+    TECH --> AUDIT
+
+    AUDIT --> QG
+    QG -- "Yes" --> DB
+    QG -- "No" --> DROP3["Discard (Unreachable)"]
+
+    DB --> DASH
+      </div>
+    </section>
+
+    <!-- 3. Where the Leads Come From -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">3. Where the Leads Come From (Lead Sourcing Architecture)</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-2">
+          <div class="flex items-center space-x-2 text-indigo-600 font-bold text-sm">
+            <i class="fa-solid fa-radar"></i>
+            <h3>1. Multi-Engine Search Radar</h3>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Automates targeted organic searches against Bing and DuckDuckGo using negative exclusion operators (<code class="mono text-xs bg-slate-100 px-1 py-0.5 rounded">-directory -listing -jobs</code>). Decodes base64 click-tracking redirects (<code class="mono text-xs bg-slate-100 px-1 py-0.5 rounded">u=a1...</code>) back to original corporate domains.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-2">
+          <div class="flex items-center space-x-2 text-emerald-600 font-bold text-sm">
+            <i class="fa-solid fa-arrows-spin"></i>
+            <h3>2. Rotational Buyer Matrices</h3>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Continuously cycles through 5 high-ticket buyer categories across major commercial hubs (Bangalore, Mumbai, Delhi, London, Dubai, Austin): private clinics, luxury real estate, immigration consultancies, independent Shopify D2C brands, and boutique agencies.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-2">
+          <div class="flex items-center space-x-2 text-purple-600 font-bold text-sm">
+            <i class="fa-brands fa-github"></i>
+            <h3>3. GitHub Org Directories</h3>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Leverages GitHub's Organization Search API with geographic filters (<code class="mono text-xs bg-slate-100 px-1 py-0.5 rounded">type:org location:Bangalore</code>). Slices directly through search engine rate limits by pulling live commercial domains from the verified organization <code class="mono text-xs bg-slate-100 px-1 py-0.5 rounded">blog</code> field.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-2">
+          <div class="flex items-center space-x-2 text-amber-600 font-bold text-sm">
+            <i class="fa-solid fa-square-rss"></i>
+            <h3>4. Live RSS Startup Launches</h3>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Monitors live RSS feeds from <strong>Show HN</strong> and <strong>HN Jobs</strong>. Filters out non-commercial submissions (emulators, hobby projects) to isolate newly launched commercial web platforms needing custom engineering, pipelines, and web upgrades.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-2">
+          <div class="flex items-center space-x-2 text-cyan-600 font-bold text-sm">
+            <i class="fa-solid fa-database"></i>
+            <h3>5. Verified Target Seed Corpus</h3>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Curated reservoir of responsive boutique clinics, aesthetic centers, and D2C brands with verified deliverable inboxes, guaranteeing that lead generation never stalls even under network throttles.
+          </p>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-2">
+          <div class="flex items-center space-x-2 text-rose-600 font-bold text-sm">
+            <i class="fa-solid fa-file-import"></i>
+            <h3>6. Manual File & URL Ingestion</h3>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Enables instant batch ingestion via textarea domain lists or CSV/TXT file uploads. Parses domain cells, strips protocols, and routes records through the full crawler, auditor, and pitch synthesizer.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 4. Search Radar Sequence Diagram -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">4. Search Radar Query Construction & Traversal Sequence</h2>
+      <p class="text-sm text-slate-600">The exact sequence executed by the Search Radar to discover and validate targets:</p>
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Daemon as Autopilot Daemon
+    participant Radar as Search Radar
+    participant Bing as Bing Search API
+    participant DDG as DuckDuckGo HTML
+    participant GH as GitHub API
+    participant Filter as Clean Domain Filter
+
+    Daemon->>Radar: Request fresh targets (niche, location)
+    Radar->>Bing: GET /search?q="{niche}" {location} official website -directory -listing
+    Bing-->>Radar: Return SERP HTML with click tracking links
+    Radar->>Radar: Decode base64 redirect tokens (u=a1...)
+    alt Results &lt; Limit
+        Radar->>DDG: POST /html (query fallback)
+        DDG-->>Radar: Return organic SERP links
+    end
+    alt Developer / Studio Niche
+        Radar->>GH: GET /search/users?q=type:org location:{location}
+        GH-->>Radar: Return organization profiles
+        Radar->>Radar: Extract commercial website from org blog
+    end
+    Radar->>Filter: Pass candidate raw URLs
+    Filter->>Filter: Match against 150+ blacklisted domains
+    Filter->>Filter: Strip subdomains, protocols &amp; tracking tails
+    Filter-->>Daemon: Return verified business domains
+      </div>
+    </section>
+
+    <!-- 5. Anti-Noise Filter -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">5. The Anti-Noise Filter (What Gets Blocked)</h2>
+      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <table class="min-w-full text-left text-xs">
+          <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider">
+            <tr>
+              <th class="py-3 px-4">Blocked Category</th>
+              <th class="py-3 px-4">Representative Signatures Filtered Out</th>
+              <th class="py-3 px-4">Engineering Rationale</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 text-slate-600 font-medium">
+            <tr>
+              <td class="py-3 px-4 font-bold text-slate-900">Tech Giants & Conglomerates</td>
+              <td class="py-3 px-4 mono text-indigo-600">google.com, apple.com, microsoft.com, amazon.com, tata.com, reliance.com, jio.com</td>
+              <td class="py-3 px-4">Large enterprise internal IT teams and procurement barriers; zero probability of agency call booking.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-bold text-slate-900">Directories & Aggregators</td>
+              <td class="py-3 px-4 mono text-indigo-600">justdial.com, indiamart.com, yelp.com, clutch.co, practo.com, zocdoc.com, 99acres.com</td>
+              <td class="py-3 px-4">Intermediary portals lacking direct business owner contact information; creates switchboard noise.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-bold text-slate-900">News, Media & Publishers</td>
+              <td class="py-3 px-4 mono text-indigo-600">ndtv.com, hindustantimes.com, theverge.com, bloomberg.com, reuters.com, nytimes.com</td>
+              <td class="py-3 px-4">Articles mentioning industry niches, not prospective client businesses.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-bold text-slate-900">Government & Public Utilities</td>
+              <td class="py-3 px-4 mono text-indigo-600">.gov, .nic.in, .mil, metrorail, irctc.com, railyatri.in, state health portals</td>
+              <td class="py-3 px-4">Government tenders only; completely non-viable for private agency outreach.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-bold text-slate-900">Hobby & Non-Commercial Sites</td>
+              <td class="py-3 px-4 mono text-indigo-600">.blogspot., .wordpress.com, .art, retro emulators, personal portfolios, wikis</td>
+              <td class="py-3 px-4">Zero commercial intent and no software or design budget.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-bold text-slate-900">Developer & Infra Subdomains</td>
+              <td class="py-3 px-4 mono text-indigo-600">docs.*, api.*, status.*, cdn.*, assets.*, github.com, gitlab.com</td>
+              <td class="py-3 px-4">Internal infrastructure endpoints rather than customer-facing business pages.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-bold text-slate-900">Error-Tracking Endpoints</td>
+              <td class="py-3 px-4 mono text-indigo-600">sentry.io, ingest.*, hex token strings (344003a8d11c41d8800fbad8383fdc50)</td>
+              <td class="py-3 px-4">Diagnostic ingest keys erroneously matched by regex as email addresses.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 6. Deep Crawler State Machine -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">6. Deep Crawler & Headless SPA Fallback Mechanics</h2>
+      <p class="text-sm text-slate-600">State machine managing fast asynchronous HTTP and seamless Playwright Chromium fallback for client-side JavaScript apps:</p>
+      <div class="mermaid">
+stateDiagram-v2
+    [*] --> TargetDiscovered
+    TargetDiscovered --> AiohttpFetch: Initiate high-speed async HTTP
+    AiohttpFetch --> CheckHTML: Receive raw response
+
+    state CheckHTML <<choice>>
+    CheckHTML --> SubpageDiscovery: Content length > 100 & hydrated
+    CheckHTML --> SPADetected: Empty body / Bot screen / Root container
+
+    state SPADetected {
+        [*] --> LaunchChromium
+        LaunchChromium --> SetStealthHeaders: Configure container flags
+        SetStealthHeaders --> NavigateDOM: page.goto(domcontentloaded)
+        NavigateDOM --> WaitForHydration: wait_for_timeout(1500ms)
+        WaitForHydration --> ExtractRenderedContent: Render dynamic client DOM
+        ExtractRenderedContent --> [*]
+    }
+
+    SPADetected --> SubpageDiscovery: Hydrated HTML returned
+    SubpageDiscovery --> ParallelFetch: Discover /contact, /about, /team
+    ParallelFetch --> ParseEntities: Extract text & DOM nodes
+    ParseEntities --> [*]
+      </div>
+    </section>
+
+    <!-- 7. Contact Mining & DNS MX Deliverability -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">7. Contact Mining & DNS MX Deliverability Verification</h2>
+      <p class="text-sm text-slate-600">Validation flow ensuring that every persisted email has active mail-routing infrastructure:</p>
+      <div class="mermaid">
+flowchart TD
+    RAW["Raw HTML Content"] --> EXTRACT["Regex & Tag Parser"]
+    RAW --> CF_DEC["Cloudflare XOR Decrypter"]
+    RAW --> MAILTO["Mailto Link Parser"]
+
+    EXTRACT --> COMBINED["Candidate Email Set"]
+    CF_DEC --> COMBINED
+    MAILTO --> COMBINED
+
+    COMBINED --> SYNTAX["Syntax & TLD Verification"]
+    SYNTAX --> DUMMY["Blacklist & Sentry Pruner"]
+    DUMMY --> MX_CHECK{"Domain in Whitelist / Cache?"}
+
+    MX_CHECK -- "Yes (gmail/outlook or cached)" --> VALID["Mark Verified & Routable"]
+    MX_CHECK -- "No (Unchecked Domain)" --> DNS_RESOLV["Query DNS MX Records (dnspython)"]
+
+    DNS_RESOLV --> RFC_CHECK{"RFC 7505 Null MX or NXDOMAIN?"}
+    RFC_CHECK -- "Yes ('.' or Dead Host)" --> DEAD["Drop: Unroutable / Bounced Inbox"]
+    RFC_CHECK -- "No (Valid Exchange)" --> SAVE_CACHE["Add to In-Memory MX Cache"]
+    SAVE_CACHE --> VALID
+      </div>
+    </section>
+
+    <!-- 8. Opportunity Auditor Flow -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">8. Opportunity Auditor & Decision-Maker Intelligence</h2>
+      <p class="text-sm text-slate-600">Signal synthesis mapping technical flaws directly to revenue impact and tailored cold pitches:</p>
+      <div class="mermaid">
+flowchart LR
+    subgraph Signals ["Website Signals"]
+        S1["No Chatbot & High Form Count"]
+        S2["Legacy CMS (WordPress/jQuery)"]
+        S3["Shopify Store & No App"]
+        S4["Manual Inquiry Forms"]
+    end
+
+    subgraph ServiceMatch ["Service Assignment"]
+        M1["Chatbots"]
+        M2["Web Development"]
+        M3["App Development"]
+        M4["Automation"]
+    end
+
+    subgraph PitchCraft ["Tailored Outreach Pitch"]
+        P1["Doctor / Founder Name Greeting"]
+        P2["Authentic Strength Praise"]
+        P3["Identified Technical Bottleneck"]
+        P4["Data-Driven Revenue Impact"]
+        P5["Call / 2-Min Video CTA"]
+    end
+
+    S1 --> M1
+    S2 --> M2
+    S3 --> M3
+    S4 --> M4
+
+    M1 --> P3
+    M2 --> P3
+    M3 --> P3
+    M4 --> P3
+
+    P1 --> PitchCraft
+    P2 --> PitchCraft
+    P3 --> PitchCraft
+    P4 --> PitchCraft
+    P5 --> PitchCraft
+      </div>
+    </section>
+
+    <!-- 9. Service Matching Matrix -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">9. Outreach & Service Matching Matrix</h2>
+      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <table class="min-w-full text-left text-xs">
+          <thead class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider">
+            <tr>
+              <th class="py-3 px-4">Service Match</th>
+              <th class="py-3 px-4">Target Business Profile</th>
+              <th class="py-3 px-4">Identified Technical Flaw</th>
+              <th class="py-3 px-4">Pitch Hook Angle</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200 text-slate-600 font-medium">
+            <tr>
+              <td class="py-3 px-4 font-bold text-indigo-600">Chatbots</td>
+              <td class="py-3 px-4">Private dental clinics, aesthetics, dermatology, law firms, cosmetic surgery</td>
+              <td class="py-3 px-4">No 24/7 AI booking assistant; losing prospective patients browsing after 7 PM</td>
+              <td class="py-3 px-4">Automated 24/7 WhatsApp AI booking assistant answering procedure FAQs and locking appointments.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-bold text-indigo-600">Web Development</td>
+              <td class="py-3 px-4">Businesses on legacy WordPress, Wix, or jQuery with slow load times</td>
+              <td class="py-3 px-4">Legacy CMS bloat, slow mobile speed, poor Core Web Vitals</td>
+              <td class="py-3 px-4">High-speed Next.js / React re-platforming with sub-second page loads and higher conversions.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-bold text-indigo-600">App Development</td>
+              <td class="py-3 px-4">Independent Shopify brands, boutique apparel, and high-GMV D2C stores</td>
+              <td class="py-3 px-4">Mobile web only; no native iOS or Android app</td>
+              <td class="py-3 px-4">Cross-platform Flutter / React Native mobile app to drive repeat orders via push notifications.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-bold text-indigo-600">Automation</td>
+              <td class="py-3 px-4">Consultancies and agencies with static multi-step contact forms</td>
+              <td class="py-3 px-4">Inquiry forms require slow, manual staff follow-up</td>
+              <td class="py-3 px-4">Automated 60-second WhatsApp/SMS response pipeline syncing inquiries directly into CRM.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-bold text-indigo-600">Custom Pipelines</td>
+              <td class="py-3 px-4">Digital platforms, marketplaces, and software startups</td>
+              <td class="py-3 px-4">Architecture lacks custom scrapers, real-time data sync, and microservices</td>
+              <td class="py-3 px-4">Bespoke backend data ingestion pipelines and third-party API integration engineering.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 10. Database Entity Relationship Diagram -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">10. Database Schema & Entity-Relationship Architecture</h2>
+      <p class="text-sm text-slate-600">Entity schema stored in SQLite WAL mode:</p>
+      <div class="mermaid">
+erDiagram
+    LEADS {
+        int id PK "Auto-increment primary key"
+        string domain UK "Unique corporate domain"
+        string company_name "Sanitized brand name"
+        string website "Normalized https URL"
+        string emails "Comma-separated verified MX emails"
+        string phones "Direct phone and WhatsApp numbers"
+        string linkedin_company "Company LinkedIn URL"
+        string linkedin_profiles "Founder/Executive profile URLs"
+        string twitter "Twitter / X handle URL"
+        string instagram "Instagram profile URL"
+        string facebook "Facebook page URL"
+        string github "GitHub organization URL"
+        string country "Country / Territory"
+        string city "City location"
+        string industry_niche "Commercial corridor"
+        string tech_stack "Comma-separated detected technologies"
+        string meta_description "Original meta summary"
+        string pitch_hook "Bespoke cold outreach copy"
+        string service_match "Chatbots | Web Dev | App Dev | Automation"
+        string opportunity_type "Identified bottleneck title"
+        string audit_notes "Detailed audit explanation"
+        string contact_name "Doctor or Founder name"
+        string business_summary "Plain-English summary of operations"
+        string where_they_are_good "Key business strengths"
+        string where_they_are_lacking "Exact technical flaws"
+        string confident_pitch "Complete cold pitch ready to send"
+        string lead_score "HOT | HIGH"
+        string source "autopilot_daemon | direct_urls | search_radar"
+        string status "Yet to Explore | Contacted"
+        timestamp created_at "Harvest timestamp"
+        timestamp updated_at "Last status update"
+    }
+      </div>
+    </section>
+
+    <!-- 11. Interactive Web Control Center -->
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold text-slate-900 border-l-4 border-slate-900 pl-3">11. Interactive Web Control Center & UI Features</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-2">
+          <h3 class="text-sm font-bold text-slate-900"><i class="fa-solid fa-bolt text-amber-500 mr-1.5"></i> 1-Click Action Buttons</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Every lead card features direct tactile buttons:
+          </p>
+          <ul class="text-xs text-slate-600 space-y-1 list-disc list-inside">
+            <li><strong>WhatsApp Button</strong>: Opens WhatsApp Web or app pre-filled with the tailored pitch.</li>
+            <li><strong>Email Button</strong>: Launches your email client pre-filled with recipient, subject, and pitch.</li>
+            <li><strong>Copy Pitch Button</strong>: One-click clipboard copy with animated visual feedback.</li>
+            <li><strong>Mark Done Button</strong>: Instantly toggles status between "Yet to Explore" and "Contacted".</li>
+          </ul>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-2">
+          <h3 class="text-sm font-bold text-slate-900"><i class="fa-solid fa-file-csv text-emerald-600 mr-1.5"></i> CRM-Ready CSV Export</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Exports a clean spreadsheet formatted in <strong>UTF-8 with BOM (<code class="mono text-xs bg-slate-100 px-1 py-0.5 rounded">utf-8-sig</code>)</strong> for seamless rendering in Excel, Google Sheets, and CRM tools. Includes all 22 attributes (company name, decision maker, verified contacts, detected flaws, pitch copy, tech stack).
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="pt-8 border-t border-slate-200 text-center text-xs text-slate-400 no-print">
+      OmniLead Pipeline System Specification • Exported Document
+    </footer>
+
+  </main>
+
+</body>
+</html>

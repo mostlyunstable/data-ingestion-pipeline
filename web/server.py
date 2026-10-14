@@ -194,3 +194,22 @@ async def api_delete_lead(lead_id: int):
 async def api_export_csv():
     filepath = export_to_csv()
     return FileResponse(filepath, filename="extracted_client_leads.csv", media_type="text/csv")
+
+@app.get("/api/download-docs")
+async def api_download_docs(format: str = Query("markdown")):
+    """Serves the architecture documentation as a downloadable Markdown or HTML file."""
+    import os
+    if format.lower() == "html":
+        filepath = os.path.join(BASE_DIR, "OMNILEAD_DOCUMENTATION.html")
+        return FileResponse(
+            filepath,
+            filename="OmniLead_Pipeline_Architecture.html",
+            media_type="text/html"
+        )
+    else:
+        filepath = os.path.join(BASE_DIR, "OMNILEAD_PIPELINE_ARCHITECTURE.md")
+        return FileResponse(
+            filepath,
+            filename="OmniLead_Pipeline_Architecture.md",
+            media_type="text/markdown"
+        )
