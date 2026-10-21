@@ -16,9 +16,8 @@ from config import USER_AGENTS, MAX_SEARCH_RESULTS
 # Indian Spam, Gambling, News, Aggregator & Non-Business Keywords to Annihilate
 INDIAN_SPAM_KEYWORDS = {
     # Gambling / Satta / Matka / Betting
-    "satta", "matka", "dpboss", "kalyan", "bazar", "bazaar", "result",
-    "gambling", "lottery", "betting", "teenpatti", "rummy", "casin",
-    "jackpot", "dream11", "prediction", "chart", "jodi", "patti",
+    "satta", "matka", "dpboss", "kalyan-matka", "kalyanmatka",
+    "gambling", "lottery", "betting", "teenpatti", "casin",
     "nagpur-satta", "satta-matka", "sattamatka",
 
     # News / Media / Portals / Tabloids / Editorial / Blogs
@@ -26,21 +25,24 @@ INDIAN_SPAM_KEYWORDS = {
     "theprint", "altnews", "swarajya", "ndtv", "timesofindia",
     "hindustantimes", "indiatoday", "dainik", "jagran", "bhaskar",
     "amarujala", "eenadu", "sakshi", "lokmat", "punjabkesari",
-    "tribune", "chronicle", "herald", "express", "patrika", "pedia",
-    "wikipedia", "bharatpedia", "vikaspedia", "wiki", "daily",
-    "news18", "zeenews", "aajtak", "firstpost", "deccan", "editorial",
-    "journal", "medicalnewstoday", "brokebackpacker", "soulofseoul",
-    "travelblog", "nomad", "traveler", "backpacker", "backpacking",
+    "tribune", "chronicle", "herald", "express", "patrika",
+    "wikipedia", "bharatpedia", "vikaspedia",
+    "news18", "zeenews", "aajtak", "firstpost", "deccan",
+    "medicalnewstoday", "brokebackpacker", "soulofseoul",
+    "travelblog", "backpacking",
 
     # Enterprise Marketplaces & Conglomerates
     "amazon.in", "flipkart.com", "meesho.com", "myntra.com", "ajio.com",
     "tatacliq.com", "jiomart.com", "blinkit.com", "zepto.in",
     "swiggy.com", "zomato.com", "bigbasket.com", "nykaa.com", "purplle.com",
 
-    # Directories & Aggregators
+    # Directories, Aggregators & Mega Portals
     "justdial", "indiamart", "tradeindia", "sulekha", "quikr", "olx",
     "practo", "lybrate", "sehat", "credihealth", "vaidam", "clinicspots",
-    "magicbricks", "99acres", "housing.com", "nobroker", "squareyards"
+    "magicbricks", "99acres", "housing.com", "nobroker", "squareyards",
+    "threebestrated", "docindia", "dermatologistsindia", "bdir.in", "365doctor",
+    "cardekho", "zigwheels", "bikedekho", "policybazaar", "paisabazaar",
+    "typingbaba", "englishtohindityping", "shiksha", "naukri"
 }
 
 SKIP_DOMAINS = {
@@ -70,6 +72,9 @@ SKIP_DOMAINS = {
     "femina.in", "cosmopolitan.in", "vogue.in", "gqindia.com", "timeout.com", "tripadvisor.com",
     "foursquare.com", "lawyerratings.com", "avvo.com", "findlaw.com", "justia.com", "lawyers.com",
     "realtor.com", "zillow.com", "redfin.com", "rightmove.co.uk", "zoopla.co.uk", "onthemarket.com",
+    "threebestrated.in", "docindia.org", "dermatologistsindia.in", "bdir.in", "365doctor.in",
+    "cardekho.com", "zigwheels.com", "bikedekho.com", "policybazaar.com", "paisabazaar.com",
+    "typingbaba.com", "englishtohindityping.com", "shiksha.com",
 
     # News, Media & Content Publishers (not prospective client businesses)
     "theverge.com", "politico.com", "wsj.com", "nytimes.com", "bloomberg.com", "reuters.com",
@@ -99,6 +104,26 @@ SKIP_DOMAINS = {
     "shopify.com", "wordpress.com", "wordpress.org", "wix.com", "squarespace.com",
     "webflow.com", "hubspot.com", "salesforce.com", "mailchimp.com", "klaviyo.com",
     "stripe.com", "paypal.com", "anthropic.com", "openai.com"
+}
+
+ENTERPRISE_DOMAINS = {
+    "samsung.com", "apple.com", "google.com", "google.co.in", "microsoft.com", "amazon.com", "amazon.in",
+    "plaid.com", "wise.com", "myntra.com", "tatacliq.com", "tata.com", "tatamotors.com", "reliance.com",
+    "jio.com", "airtel.in", "irctc.co.in", "irctctourism.com", "ixigo.com", "maxhealthcare.in",
+    "aakashhealthcare.com", "geeksforgeeks.org", "deepai.org", "directi.com", "speedtest.net",
+    "flipkart.com", "zomato.com", "swiggy.com", "makemytrip.com", "yatra.com", "cleartrip.com",
+    "ola.in", "uber.com", "paytm.com", "phonepe.com", "cred.club", "byjus.com", "unacademy.com",
+    "vedantu.com", "deloitte.com", "mckinsey.com", "pwc.com", "ey.com", "kpmg.com", "accenture.com",
+    "tcs.com", "infosys.com", "wipro.com", "cognizant.com", "hcltech.com", "mpmetrorail.com",
+    "confirmtkt.com", "railyatri.in", "shadowfax.in", "dtdc.com", "linear.app", "superhuman.com",
+    "raycast.com", "warp.dev", "clickhouse.com", "questdb.io", "timescale.com", "airbyte.com",
+    "meltano.com", "dagster.io", "prefect.io", "gymshark.com", "allbirds.com", "warbyparker.com",
+    "glossier.com", "hims.com", "nykaa.com", "purplle.com", "ajio.com", "only.in", "wforwoman.com",
+    "thecollective.in", "luxepolis.com", "luxuryescapes.com", "toprankers.com", "tophat.com",
+    "feedough.com", "edtechhub.org", "nirankarihealthcity.org", "projectreal.gg", "ama.org",
+    "zohorecruit.in", "mpcareer.in", "govtjobguru.in", "plutuseducation.com", "digitalregenesys.com",
+    "zerodha.com", "zerodha.tech", "groww.in", "upstox.com", "angelone.in", "newtonschool.co",
+    "scaler.com", "private.com"
 }
 
 def decode_bing_u(u_val: str) -> str:
@@ -143,13 +168,14 @@ def clean_target_domain(url: str) -> str:
         if not domain or len(domain) < 4 or "." not in domain:
             return ""
 
-        if any(skip in domain for skip in SKIP_DOMAINS):
+        # Exact or subdomain check against skip list (prevents partial substring match bugs)
+        if any(domain == skip or domain.endswith("." + skip) for skip in SKIP_DOMAINS):
             return ""
 
-        # Strictly filter out Indian spam, gambling, betting, satta, matka, news, aggregators
+        # Strictly filter out Indian spam, gambling, betting, satta, matka
         if any(spam in domain for spam in INDIAN_SPAM_KEYWORDS):
             return ""
-        if re.search(r'(satta|matka|dpboss|kalyan|lottery|gambl|bazar|bazaar|teenpatti)', domain):
+        if re.search(r'(satta|matka|dpboss|kalyan-matka|kalyanmatka|lottery|gambl|teenpatti)', domain):
             return ""
 
         # Filter out foreign country TLDs when targeting Indian businesses
@@ -161,7 +187,10 @@ def clean_target_domain(url: str) -> str:
             "askdifference", "finesentence", "sentence", "grammar", "meaning", "definition",
             "synonym", "antonym", "thesaurus", "dictionary", "baidu.", "zhihu.", "weibo.",
             "lyrics", "quotes", "sayings", "wallpaper", "apkmod", "modapk", "torrent",
-            "converter", "calculator", "differencebetween", "diffchecker", "wikihow"
+            "converter", "calculator", "differencebetween", "diffchecker", "wikihow",
+            "samfw", "softonic", "getdroidtips", "droidcrafts", "tenorshare", "mindthegapps",
+            "elevenforum", "tenforums", "symbolab", "rolladie", "onlinedice", "multigentool",
+            "apkpure", "apkmirror", "xda-developers"
         ]):
             return ""
 
@@ -180,36 +209,18 @@ def clean_target_domain(url: str) -> str:
             return ""
 
         # Filter out news publishers, job aggregators, and banking portals
-        if any(m in domain for m in [
+        if any(domain == m or domain.endswith("." + m) for m in [
             "news18.com", "hindustantimes.com", "siasat.com", "how2shout.com",
             "directv.com", "icicidirect.com", "natelangana.com", "kollegeapply.com",
-            "indgovtjobs", "sarkari", "ndtv.com", "moneycontrol.com", "livemint.com",
+            "indgovtjobs.in", "ndtv.com", "moneycontrol.com", "livemint.com",
             "firstpost.com", "zeenews.com", "abplive.com", "aajtak.in", "thehindu.com",
             "deccanchronicle.com", "akhiljobs.com", "eapply.in", "adda247.com",
-            "hdfcbank.com", "icicibank.com", "sbi.co.in", "tipsnetbd.com", "myasta.avadhutsathe.in"
+            "hdfcbank.com", "icicibank.com", "sbi.co.in", "tipsnetbd.com"
         ]):
             return ""
 
-        # Filter out massive enterprises, unicorns, government bodies, rail & hospital conglomerates
-        # (These have internal engineering teams/RFPs and are impossible for agencies to book calls with)
-        if any(ent in domain for ent in [
-            "samsung.com", "apple.com", "google.com", "microsoft.com", "amazon.com", "plaid.com", "wise.com",
-            "myntra.com", "tatacliq.com", "tata.com", "tatamotors.com", "reliance.com", "jio.com", "airtel.in",
-            "irctc.com", "irctctourism.com", "ixigo.com", "maxhealthcare.in", "aakashhealthcare.com",
-            "geeksforgeeks.org", "deepai.org", "directi.com", "speedtest.net", "flipkart.com", "zomato.com",
-            "swiggy.com", "makemytrip.com", "yatra.com", "cleartrip.com", "ola.in", "uber.com", "paytm.com",
-            "phonepe.com", "cred.club", "byjus.com", "unacademy.com", "vedantu.com", "deloitte.com", "mckinsey.com",
-            "pwc.com", "ey.com", "kpmg.com", "accenture.com", "tcs.com", "infosys.com", "wipro.com", "cognizant.com",
-            "hcltech.com", "mpmetrorail.com", "confirmtkt.com", "railyatri.in", "shadowfax.in", "dtdc.com",
-            "linear.app", "superhuman.com", "raycast.com", "warp.dev", "clickhouse.com", "questdb.io",
-            "timescale.com", "airbyte.com", "meltano.com", "dagster.io", "prefect.io", "gymshark.com",
-            "allbirds.com", "warbyparker.com", "glossier.com", "hims.com", "nykaa.com", "purplle.com",
-            "ajio.com", "only.in", "wforwoman.com", "thecollective.in", "luxepolis.com", "luxuryescapes.com",
-            "toprankers.com", "tophat.com", "feedough.com", "edtechhub.org", "nirankarihealthcity.org",
-            "projectreal.gg", "ama.org", "zohorecruit.in", "mpcareer.in", "govtjobguru.in", "plutuseducation.com",
-            "digitalregenesys.com", "zerodha.com", "zerodha.tech", "groww.in", "upstox.com", "angelone.in",
-            "newtonschool.co", "scaler.com", "private.com"
-        ]):
+        # Filter out massive enterprises and conglomerates
+        if any(domain == ent or domain.endswith("." + ent) for ent in ENTERPRISE_DOMAINS):
             return ""
 
         # Filter out institutional, railway, bank, directory, adult, casino, and aggregator keywords
@@ -231,45 +242,53 @@ def clean_target_domain(url: str) -> str:
         return ""
 
 def search_bing_lite(query: str, max_results: int = MAX_SEARCH_RESULTS) -> list:
-    """Organic web search using Bing with multi-page pagination & base64 redirect decoding."""
+    """Organic web search using Bing with Indian locale and base64 redirect decoding."""
     headers = {
         "User-Agent": random.choice(USER_AGENTS),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9,hi;q=0.8"
+        "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8"
     }
 
     encoded_q = urllib.parse.quote_plus(query)
     discovered = []
     seen = set()
 
-    # Traverses pages 1, 2, and 3 to harvest up to 50 deep, authentic results per query
     for offset in [1, 15, 31]:
         if len(discovered) >= max_results:
             break
-        url = f"https://www.bing.com/search?q={encoded_q}&count=50&first={offset}"
+        url = f"https://www.bing.com/search?q={encoded_q}&setmkt=en-in&setlang=en-in&cc=IN&count=50&first={offset}"
         try:
             resp = requests.get(url, headers=headers, timeout=8)
             if resp.status_code == 200:
                 soup = BeautifulSoup(resp.text, "html.parser")
+                
+                # Extract candidate links from both h2 headers and b_algo lists
+                candidate_links = []
+                for h2 in soup.find_all("h2"):
+                    a = h2.find("a", href=True)
+                    if a and a["href"] not in candidate_links:
+                        candidate_links.append(a["href"])
+
                 for li in soup.find_all("li", class_="b_algo"):
                     for a in li.find_all("a", href=True):
-                        raw_href = a["href"]
-                        real_href = raw_href
-                        if "bing.com/ck/a" in raw_href:
-                            parsed = urllib.parse.parse_qs(urllib.parse.urlparse(raw_href).query)
-                            if "u" in parsed:
-                                decoded = decode_bing_u(parsed["u"][0])
-                                if decoded:
-                                    real_href = decoded
+                        if a["href"] not in candidate_links:
+                            candidate_links.append(a["href"])
 
-                        domain = clean_target_domain(real_href)
-                        if domain and domain not in seen:
-                            seen.add(domain)
-                            discovered.append(f"https://{domain}")
-                            if len(discovered) >= max_results:
-                                break
-                    if len(discovered) >= max_results:
-                        break
+                for raw_href in candidate_links:
+                    real_href = raw_href
+                    if "bing.com/ck/a" in raw_href:
+                        parsed = urllib.parse.parse_qs(urllib.parse.urlparse(raw_href).query)
+                        if "u" in parsed:
+                            decoded = decode_bing_u(parsed["u"][0])
+                            if decoded:
+                                real_href = decoded
+
+                    domain = clean_target_domain(real_href)
+                    if domain and domain not in seen:
+                        seen.add(domain)
+                        discovered.append(f"https://{domain}")
+                        if len(discovered) >= max_results:
+                            break
         except Exception:
             pass
 
@@ -353,40 +372,39 @@ def discover_github_tech_companies(location: str = "Bangalore", keyword: str = "
 def hunt_businesses(niche: str, location: str, limit: int = 25) -> list:
     """
     Combines precision multi-engine search queries to locate real target Indian domains.
-    Rotates queries across Bing, DuckDuckGo, and specialized search operators.
+    Uses natural high-yield query patterns without rigid double quotes.
     """
     niche = niche.strip()
     location = location.strip()
+    clean_loc = location.replace(",", " ").strip()
 
     results = []
     seen = set()
 
     # Precision Organic Search Queries for Indian Businesses
-    if location:
+    if clean_loc:
         queries = [
-            f'"{niche}" "{location}" official website -directory -listing -justdial -practo -indiamart -lybrate -sulekha -satta -matka -imdb -starsunfolded -wikipedia',
-            f'"{niche}" "{location}" site:.in "contact" OR "about" -directory -jobs -listing -imdb -wiki',
-            f'"{niche}" "{location}" site:.co.in "contact" -jobs -directory',
-            f'"{niche}" "{location}" "book appointment" OR "contact us" -directory -jobs -practo -lybrate',
-            f'site:.in "powered by shopify" "{niche}" "{location}"'
+            f"{niche} in {clean_loc} official website contact",
+            f"{niche} clinic {clean_loc} appointment phone +91",
+            f"{niche} studio {clean_loc} portfolio contact us",
+            f"{niche} brand India buy online contact",
+            f"{niche} {clean_loc} book appointment contact us",
+            f"{niche} {clean_loc} phone email contact"
         ]
     else:
         queries = [
-            f'"{niche}" India official website -directory -listing -justdial -practo -indiamart -satta -matka -imdb -wiki',
-            f'"{niche}" site:.in "contact us" -jobs -careers -directory -wiki',
-            f'"{niche}" boutique clinic practice India -directory'
+            f"{niche} India official website contact us",
+            f"{niche} clinic India appointment phone",
+            f"{niche} boutique studio practice India contact"
         ]
 
     for q in queries:
         found = search_bing_lite(q, max_results=limit)
-        if len(found) < limit:
-            found.extend(search_duckduckgo_lite(q, max_results=limit))
-
         for url in found:
             clean_dom = clean_target_domain(url)
             if clean_dom and clean_dom not in seen:
                 seen.add(clean_dom)
-                results.append(url)
+                results.append(f"https://{clean_dom}")
                 if len(results) >= limit:
                     return results[:limit]
 

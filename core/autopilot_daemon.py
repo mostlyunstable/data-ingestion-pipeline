@@ -73,6 +73,8 @@ class AutopilotDaemon:
                 job_state.log("⚠️ [Autopilot] Expanding target corridor sweep...")
                 continue
 
+            job_state.total_target = len(targets)
+            job_state.processed = 0
             job_state.current_action = f"Auditing {len(targets)} candidates ({persisted_new}/{batch_size} locked)..."
             job_state.log(f"🎯 [Autopilot] Round {attempts}: Hunting {len(targets)} candidates to fulfill remaining {needed} leads...")
 

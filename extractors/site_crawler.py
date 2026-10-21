@@ -195,6 +195,28 @@ async def crawl_single_company(target_url_or_domain: str, niche: str = "", sourc
 
         result["tech_stack"] = detect_tech_stack(home_html, home_soup)
 
+        # Step 1b: Continuous Partner & Agency Discovery Flywheel
+        try:
+            from extractors.autopilot_sources import autopilot_manager
+            from extractors.search_radar import clean_target_domain
+            for a in home_soup.find_all("a", href=True):
+                href = a.get("href", "").strip()
+                anchor_text = a.get_text().strip().lower()
+                if href.startswith("http://") or href.startswith("https://"):
+                    cand_dom = clean_target_domain(href)
+                    if cand_dom and cand_dom != domain:
+                        is_partner_credit = any(p in anchor_text for p in [
+                            "designed by", "developed by", "powered by", "built by",
+                            "crafted by", "agency", "studio", "partner", "consultant", "managed by"
+                        ])
+                        is_indian_biz = cand_dom.endswith((".in", ".co.in")) or any(k in cand_dom for k in [
+                            "agency", "studio", "digital", "tech", "design", "media", "clinic", "dental", "labs"
+                        ])
+                        if is_partner_credit or is_indian_biz:
+                            autopilot_manager.discovered_partner_pool.add(f"https://{cand_dom}")
+        except Exception:
+            pass
+
         # Step 2: Discover High-Value Subpages (Contact, About, Team, Doctors, Founders)
         subpage_urls = set()
         for a in home_soup.find_all("a", href=True):

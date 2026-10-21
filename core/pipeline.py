@@ -144,11 +144,9 @@ async def run_pipeline_for_urls(urls: list, niche: str = "", source: str = "dire
         async with semaphore:
             job_state.current_action = f"Scanning {target_url[:40]}..."
             res = await process_company_lead(target_url, niche=niche, source=source)
-            if not maintain_job_state:
-                job_state.processed += 1
+            job_state.processed += 1
             if res and res["lead"]:
-                if not maintain_job_state:
-                    job_state.success_count += 1
+                job_state.success_count += 1
                 lead = res["lead"]
                 emails = lead.get("emails", [])
                 phones = lead.get("phones", [])
