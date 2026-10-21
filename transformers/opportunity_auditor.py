@@ -49,7 +49,7 @@ def is_valid_name(cand: str, domain: str = "") -> bool:
     if domain_root and (clean_c in domain_root or domain_root in clean_c or any(corp in clean_c for corp in ['llp', 'pvt', 'ltd', 'corp', 'inc'])):
         return False
     words = cand.lower().split()
-    if any(w in STOP_WORDS_AND_TITLES or w in MEDICAL_CLINIC_STOP_WORDS or w in COMMON_LOCATIONS for w in words):
+    if any(w in STOP_WORDS_AND_TITLES or w in MEDICAL_CLINIC_STOP_WORDS or w in COMMON_LOCATIONS or w in GENERIC_EMAIL_PREFIXES for w in words):
         return False
     return True
 
@@ -75,7 +75,9 @@ GENERIC_EMAIL_PREFIXES = {
     "chief", "officer", "manager", "associate", "inbox", "compliance", "privacy",
     "investor", "investors", "relations", "export", "exports", "import", "imports",
     "order", "orders", "shipping", "finance", "accounts", "warehouse", "store",
-    "customercare", "gifting", "gift", "wholesale", "retail", "franchise"
+    "customercare", "gifting", "gift", "wholesale", "retail", "franchise",
+    "reservation", "reservations", "bulkquery", "query", "queries", "bulk",
+    "dealer", "dealers", "distributor", "pr", "marketing"
 }
 
 def infer_name_from_email(emails: list, domain: str = "") -> str:
@@ -265,6 +267,32 @@ def audit_business_for_services(
 
     where_they_are_good = " • ".join(strengths)
 
+    # Clean and resolve niche for high-converting, natural outreach prose
+    clean_niche = (niche or "").strip()
+    if not clean_niche or "autopilot" in clean_niche.lower() or clean_niche.lower() in ["direct batch", "imported", "direct"]:
+        if any(k in full_text.lower() or k in domain for k in ["dental", "dentist", "teeth", "smile"]):
+            target_industry = "specialty dental & clinical care"
+        elif any(k in full_text.lower() or k in domain for k in ["fertility", "ivf", "reproduct"]):
+            target_industry = "fertility & reproductive healthcare"
+        elif any(k in full_text.lower() or k in domain for k in ["skin", "derma", "hair", "aesthetic"]):
+            target_industry = "aesthetic dermatology & clinical care"
+        elif any(k in full_text.lower() or k in domain for k in ["architect", "interior", "decor", "design studio"]):
+            target_industry = "luxury architecture & interior design"
+        elif any(k in full_text.lower() or k in domain for k in ["law", "legal", "advocate", "attorney"]):
+            target_industry = "corporate legal & advisory services"
+        elif any(k in full_text.lower() or k in domain for k in ["visa", "immigration", "overseas"]):
+            target_industry = "immigration & overseas consulting"
+        elif any(k in full_text.lower() or k in domain for k in ["resort", "hotel", "spa", "wellness", "ayurved"]):
+            target_industry = "luxury wellness & hospitality"
+        elif has_ecommerce or "shopify" in techs:
+            target_industry = "direct-to-consumer ecommerce"
+        elif "agency" in full_text.lower() or "studio" in full_text.lower() or "marketing" in full_text.lower():
+            target_industry = "digital agency & creative services"
+        else:
+            target_industry = "private practice & clinical care" if is_high_ticket_practice else "your industry"
+    else:
+        target_industry = clean_niche.lower()
+
     # 3. What they are LACKING (Flaws to fix)
     weaknesses = []
     service_match = "Chatbots"
@@ -280,7 +308,7 @@ def audit_business_for_services(
         lead_score = "HOT"
         pitch_body = (
             f"noticed your website doesn't currently have a 24/7 AI WhatsApp booking assistant. "
-            f"In {niche.lower() if niche else 'private practice'}, over 40% of prospective clients browse on mobile after hours (7 PM–midnight) and leave without booking if they can't get instant slot confirmation. "
+            f"In {target_industry}, over 40% of prospective clients browse on mobile after hours (7 PM–midnight) and leave without booking if they can't get instant slot confirmation. "
             f"I build automated 24/7 AI WhatsApp booking bots that answer patient procedure FAQs, qualify inquiries, and directly lock in consultation appointments into your calendar without extra front-desk overhead."
         )
 

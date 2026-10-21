@@ -12,7 +12,8 @@ GENERIC_BRAND_STOP_WORDS = {
     'near me', 'near you', 'home', 'homepage', 'welcome', 'official site', 'login',
     'contact us', 'about us', 'services', 'find a dentist', 'find a doctor',
     'compare 250+ practices', 'compare practices', 'reviews', 'ratings', 'open today',
-    'best dentist near me', 'best clinic near me', 'affordable dentist', 'find a lawyer'
+    'best dentist near me', 'best clinic near me', 'affordable dentist', 'find a lawyer',
+    'online store', 'official website', 'welcome to'
 }
 
 SPAM_BRAND_KEYWORDS = {
@@ -24,8 +25,10 @@ SPAM_BRAND_KEYWORDS = {
 
 COMMON_LOCATIONS = {
     'koramangala', 'indiranagar', 'bandra', 'juhu', 'whitefield', 'gurgaon', 'noida',
-    'bangalore', 'mumbai', 'delhi', 'hyderabad', 'chennai', 'pune', 'london', 'dubai',
-    'new york', 'austin', 'central london', 'manchester', 'birmingham', 'chicago'
+    'bangalore', 'bengaluru', 'mumbai', 'delhi', 'new delhi', 'hyderabad', 'chennai',
+    'pune', 'kolkata', 'ahmedabad', 'jaipur', 'london', 'dubai', 'new york', 'austin',
+    'central london', 'manchester', 'birmingham', 'chicago',
+    'india', 'canada', 'australia', 'usa', 'uk', 'united states', 'singapore', 'uae', 'germany'
 }
 
 def format_domain_brand(domain: str) -> str:
@@ -98,7 +101,9 @@ def clean_company_brand_name(title: str, domain: str) -> str:
             return res
 
     res = finalize_name(valid_parts[0])
-    return res or fallback_name
+    if not res or res.lower().strip() in COMMON_LOCATIONS or len(res) < 3:
+        return fallback_name
+    return res
 
 def clean_lead_payload(raw_lead: dict) -> dict:
     """Normalizes all fields before database entry."""
