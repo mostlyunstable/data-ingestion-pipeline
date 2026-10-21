@@ -60,9 +60,15 @@ async def process_company_lead(url: str, niche: str, source: str) -> dict:
         # Clean
         cleaned = clean_lead_payload(raw_lead)
 
-        # Blacklist massive directories and platforms
+        c_name = cleaned.get("company_name", "").strip()
+        if not c_name or len(c_name) < 2:
+            return None
+
+        # Blacklist massive directories, platforms, and Indian spam/gambling
         dom = cleaned.get("domain", "").lower()
-        if any(b in dom for b in [
+        if any(b in dom or b in c_name.lower() for b in [
+            "satta", "matka", "dpboss", "kalyan", "bazar", "gambl", "lottery",
+            "pedia", "freepress", "newslaundry", "editorial", "journal",
             "ycombinator", "github", "apple", "google", "microsoft", "producthunt",
             "reddit", "twitter", "linkedin", "wikipedia", "shopify", "wordpress",
             "wix", "squarespace", "amazon", "stripe", "hubspot", "mailchimp"
@@ -75,6 +81,24 @@ async def process_company_lead(url: str, niche: str, source: str) -> dict:
 
         if not (has_email or has_phone):
             return None
+
+        # Indian Commercial Quality Gate: Strictly ensures Indian client focus
+        country = cleaned.get("country", "")
+        phones_str = " ".join(cleaned.get("phones", []))
+        is_indian = (
+            country == "India" or
+            "+91" in phones_str or
+            dom.endswith(".in") or
+            dom.endswith(".co.in") or
+            any(city in (cleaned.get("city", "") + " " + cleaned.get("meta_description", "")).lower() for city in [
+                "bangalore", "bengaluru", "mumbai", "delhi", "gurgaon", "gurugram", "noida",
+                "hyderabad", "pune", "chennai", "kolkata", "ahmedabad", "jaipur", "kochi",
+                "chandigarh", "indore", "surat", "lucknow", "coimbatore", "goa", "india"
+            ])
+        )
+        if not is_indian:
+            return None
+        cleaned["country"] = "India"
 
         # Generate Pitch Hook if not already tailored by opportunity auditor
         if not cleaned.get("pitch_hook"):

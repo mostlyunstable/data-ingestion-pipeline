@@ -13,13 +13,44 @@ import requests
 from bs4 import BeautifulSoup
 from config import USER_AGENTS, MAX_SEARCH_RESULTS
 
+# Indian Spam, Gambling, News, Aggregator & Non-Business Keywords to Annihilate
+INDIAN_SPAM_KEYWORDS = {
+    # Gambling / Satta / Matka / Betting
+    "satta", "matka", "dpboss", "kalyan", "bazar", "bazaar", "result",
+    "gambling", "lottery", "betting", "teenpatti", "rummy", "casin",
+    "jackpot", "dream11", "prediction", "chart", "jodi", "patti",
+    "nagpur-satta", "satta-matka", "sattamatka",
+
+    # News / Media / Portals / Tabloids / Editorial / Blogs
+    "newslaundry", "freepress", "thewire", "opindia", "scroll.in",
+    "theprint", "altnews", "swarajya", "ndtv", "timesofindia",
+    "hindustantimes", "indiatoday", "dainik", "jagran", "bhaskar",
+    "amarujala", "eenadu", "sakshi", "lokmat", "punjabkesari",
+    "tribune", "chronicle", "herald", "express", "patrika", "pedia",
+    "wikipedia", "bharatpedia", "vikaspedia", "wiki", "daily",
+    "news18", "zeenews", "aajtak", "firstpost", "deccan", "editorial",
+    "journal", "medicalnewstoday", "brokebackpacker", "soulofseoul",
+    "travelblog", "nomad", "traveler", "backpacker", "backpacking",
+
+    # Enterprise Marketplaces & Conglomerates
+    "amazon.in", "flipkart.com", "meesho.com", "myntra.com", "ajio.com",
+    "tatacliq.com", "jiomart.com", "blinkit.com", "zepto.in",
+    "swiggy.com", "zomato.com", "bigbasket.com", "nykaa.com", "purplle.com",
+
+    # Directories & Aggregators
+    "justdial", "indiamart", "tradeindia", "sulekha", "quikr", "olx",
+    "practo", "lybrate", "sehat", "credihealth", "vaidam", "clinicspots",
+    "magicbricks", "99acres", "housing.com", "nobroker", "squareyards"
+}
+
 SKIP_DOMAINS = {
     # Search engines & Tech giants
     "google.com", "google.co.in", "bing.com", "duckduckgo.com", "yahoo.com", "msn.com", "live.com",
-    "microsoft.com", "apple.com", "amazon.com", "ebay.com", "etsy.com", "wikipedia.org",
+    "microsoft.com", "apple.com", "amazon.com", "amazon.in", "ebay.com", "etsy.com", "wikipedia.org",
     
-    # Social media & video
-    "facebook.com", "twitter.com", "x.com", "instagram.com", "linkedin.com", "reddit.com",
+    # Social media & video & chat platforms
+    "facebook.com", "meta.com", "twitter.com", "x.com", "instagram.com", "linkedin.com", "reddit.com",
+    "whatsapp.com", "wa.me", "t.me", "telegram.org", "signal.org",
     "quora.com", "pinterest.com", "youtube.com", "tiktok.com", "vimeo.com", "discord.com", "discord.gg",
     "slack.com", "medium.com", "substack.com", "figma.com", "notion.site", "github.com", "gitlab.com", "bitbucket.org",
 
@@ -28,7 +59,7 @@ SKIP_DOMAINS = {
     "justdial.com", "clutch.co", "g2.com", "capterra.com", "trustpilot.com", "trustradius.com",
     "upwork.com", "fiverr.com", "freelancer.com", "toptal.com", "indeed.com", "glassdoor.com", "naukri.com",
     "investopedia.com", "coursera.org", "udemy.com", "forbes.com", "techcrunch.com", "crunchbase.com",
-    "gov.in", "nic.in", "reliancedigital.in", "flipkart.com",
+    "gov.in", "nic.in", "reliancedigital.in", "flipkart.com", "meesho.com",
     "sulekha.com", "zhihu.com", "stylecraze.com", "practo.com", "lybrate.com", "magicbricks.com",
     "99acres.com", "housing.com", "lbb.in", "yappe.in", "quikr.com", "olx.in", "sehat.com",
     "credihealth.com", "vaidam.com", "clinicspots.com", "clinicsspots.com", "topdoctors.co.uk",
@@ -47,14 +78,21 @@ SKIP_DOMAINS = {
     "washingtonpost.com", "usatoday.com", "huffpost.com", "nbcnews.com", "cnbc.com",
     "techfundingnews.com", "techmeme.com", "theinformation.com", "venturebeat.com", "zdnet.com",
     "cnet.com", "techradar.com", "stratechery.com", "nobelprize.org", "archive.org", "eff.org",
+    "freepressjournal.in", "newslaundry.com", "medicalnewstoday.com", "iadvl.org",
 
     # Personal hobby, retro, art, and non-commercial portfolio sites
     "dosdays.co.uk", "niklasroy.com", "thoreaubasic.com", "stillwet.art", "dmitrybrant.com",
+
+    # Entertainment, Bollywood, Gossip & Biography Portals (not commercial businesses)
+    "imdb.com", "starsunfolded.com", "bollywoodhungama.com", "pinkvilla.com", "filmfare.com",
+    "koimoi.com", "tellychakkar.com", "bollywoodbubble.com", "boxofficeindia.com", "filmibeat.com",
+    "cineblitz.in", "glamsham.com", "santabanta.com", "scoopwhoop.com", "mensxp.com", "storypick.com",
 
     # Educational dictionaries, encyclopedias, and reference portals (not SMB clients)
     "dictionary.net", "vocabulary.com", "oxfordlearnersdictionaries.com", "britannica.com",
     "merriam-webster.com", "wordreference.com", "cambridge.org", "collinsdictionary.com",
     "thesaurus.com", "dictionary.com", "wiktionary.org", "wikipedia.org", "dictionaryapi.dev",
+    "bharatpedia.org",
 
     # Platform hubs & Foundation models
     "news.ycombinator.com", "ycombinator.com", "producthunt.com",
@@ -106,6 +144,25 @@ def clean_target_domain(url: str) -> str:
             return ""
 
         if any(skip in domain for skip in SKIP_DOMAINS):
+            return ""
+
+        # Strictly filter out Indian spam, gambling, betting, satta, matka, news, aggregators
+        if any(spam in domain for spam in INDIAN_SPAM_KEYWORDS):
+            return ""
+        if re.search(r'(satta|matka|dpboss|kalyan|lottery|gambl|bazar|bazaar|teenpatti)', domain):
+            return ""
+
+        # Filter out foreign country TLDs when targeting Indian businesses
+        if domain.endswith((".cn", ".ru", ".jp", ".de", ".fr", ".br", ".vn", ".it", ".nl", ".pl", ".ua", ".kr", ".tr", ".id", ".th", ".pk", ".bd", ".ng", ".ir", ".cz", ".ro", ".hu", ".se", ".no", ".fi", ".dk", ".ar", ".cl", ".mx", ".za")):
+            return ""
+
+        # Filter out dictionary, vocabulary, question-answer, sentence examples, content farms & search portals
+        if any(cf in domain for cf in [
+            "askdifference", "finesentence", "sentence", "grammar", "meaning", "definition",
+            "synonym", "antonym", "thesaurus", "dictionary", "baidu.", "zhihu.", "weibo.",
+            "lyrics", "quotes", "sayings", "wallpaper", "apkmod", "modapk", "torrent",
+            "converter", "calculator", "differencebetween", "diffchecker", "wikihow"
+        ]):
             return ""
 
         # Filter out government, educational portals, personal blogs, and non-commercial TLDs
@@ -174,43 +231,47 @@ def clean_target_domain(url: str) -> str:
         return ""
 
 def search_bing_lite(query: str, max_results: int = MAX_SEARCH_RESULTS) -> list:
-    """Organic web search using Bing with base64 redirect decoding."""
+    """Organic web search using Bing with multi-page pagination & base64 redirect decoding."""
     headers = {
         "User-Agent": random.choice(USER_AGENTS),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9"
+        "Accept-Language": "en-US,en;q=0.9,hi;q=0.8"
     }
 
     encoded_q = urllib.parse.quote_plus(query)
-    url = f"https://www.bing.com/search?q={encoded_q}&count=40"
     discovered = []
     seen = set()
 
-    try:
-        resp = requests.get(url, headers=headers, timeout=9)
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, "html.parser")
-            for li in soup.find_all("li", class_="b_algo"):
-                for a in li.find_all("a", href=True):
-                    raw_href = a["href"]
-                    real_href = raw_href
-                    if "bing.com/ck/a" in raw_href:
-                        parsed = urllib.parse.parse_qs(urllib.parse.urlparse(raw_href).query)
-                        if "u" in parsed:
-                            decoded = decode_bing_u(parsed["u"][0])
-                            if decoded:
-                                real_href = decoded
+    # Traverses pages 1, 2, and 3 to harvest up to 50 deep, authentic results per query
+    for offset in [1, 15, 31]:
+        if len(discovered) >= max_results:
+            break
+        url = f"https://www.bing.com/search?q={encoded_q}&count=50&first={offset}"
+        try:
+            resp = requests.get(url, headers=headers, timeout=8)
+            if resp.status_code == 200:
+                soup = BeautifulSoup(resp.text, "html.parser")
+                for li in soup.find_all("li", class_="b_algo"):
+                    for a in li.find_all("a", href=True):
+                        raw_href = a["href"]
+                        real_href = raw_href
+                        if "bing.com/ck/a" in raw_href:
+                            parsed = urllib.parse.parse_qs(urllib.parse.urlparse(raw_href).query)
+                            if "u" in parsed:
+                                decoded = decode_bing_u(parsed["u"][0])
+                                if decoded:
+                                    real_href = decoded
 
-                    domain = clean_target_domain(real_href)
-                    if domain and domain not in seen:
-                        seen.add(domain)
-                        discovered.append(f"https://{domain}")
-                        if len(discovered) >= max_results:
-                            break
-                if len(discovered) >= max_results:
-                    break
-    except Exception as e:
-        print(f"[SearchRadar] Bing search error: {e}")
+                        domain = clean_target_domain(real_href)
+                        if domain and domain not in seen:
+                            seen.add(domain)
+                            discovered.append(f"https://{domain}")
+                            if len(discovered) >= max_results:
+                                break
+                    if len(discovered) >= max_results:
+                        break
+        except Exception:
+            pass
 
     return discovered
 
@@ -291,8 +352,8 @@ def discover_github_tech_companies(location: str = "Bangalore", keyword: str = "
 
 def hunt_businesses(niche: str, location: str, limit: int = 25) -> list:
     """
-    Combines multi-engine search queries to locate real target domains.
-    Rotates queries across Bing, GitHub Org directories, and DuckDuckGo.
+    Combines precision multi-engine search queries to locate real target Indian domains.
+    Rotates queries across Bing, DuckDuckGo, and specialized search operators.
     """
     niche = niche.strip()
     location = location.strip()
@@ -300,22 +361,25 @@ def hunt_businesses(niche: str, location: str, limit: int = 25) -> list:
     results = []
     seen = set()
 
-    # 1. Organic Web Search Queries across commercial hubs
+    # Precision Organic Search Queries for Indian Businesses
     if location:
         queries = [
-            f'"{niche}" {location} official website -directory -listing -jobs',
-            f'"{niche}" {location} clinic appointment booking -jobs',
-            f'"{niche}" {location} contact us -wikipedia'
+            f'"{niche}" "{location}" official website -directory -listing -justdial -practo -indiamart -lybrate -sulekha -satta -matka -imdb -starsunfolded -wikipedia',
+            f'"{niche}" "{location}" site:.in "contact" OR "about" -directory -jobs -listing -imdb -wiki',
+            f'"{niche}" "{location}" site:.co.in "contact" -jobs -directory',
+            f'"{niche}" "{location}" "book appointment" OR "contact us" -directory -jobs -practo -lybrate',
+            f'site:.in "powered by shopify" "{niche}" "{location}"'
         ]
     else:
         queries = [
-            f'"{niche}" official website -directory -listing',
-            f'"{niche}" boutique clinic practice'
+            f'"{niche}" India official website -directory -listing -justdial -practo -indiamart -satta -matka -imdb -wiki',
+            f'"{niche}" site:.in "contact us" -jobs -careers -directory -wiki',
+            f'"{niche}" boutique clinic practice India -directory'
         ]
 
     for q in queries:
         found = search_bing_lite(q, max_results=limit)
-        if len(found) < 4:
+        if len(found) < limit:
             found.extend(search_duckduckgo_lite(q, max_results=limit))
 
         for url in found:
@@ -324,8 +388,6 @@ def hunt_businesses(niche: str, location: str, limit: int = 25) -> list:
                 seen.add(clean_dom)
                 results.append(url)
                 if len(results) >= limit:
-                    break
-        if len(results) >= limit:
-            break
+                    return results[:limit]
 
     return results[:limit]

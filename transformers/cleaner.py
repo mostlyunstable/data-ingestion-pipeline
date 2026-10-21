@@ -15,6 +15,13 @@ GENERIC_BRAND_STOP_WORDS = {
     'best dentist near me', 'best clinic near me', 'affordable dentist', 'find a lawyer'
 }
 
+SPAM_BRAND_KEYWORDS = {
+    'satta', 'matka', 'dpboss', 'kalyan', 'bazar', 'bazaar', 'result',
+    'gambling', 'lottery', 'teenpatti', 'prediction', 'chart', 'jodi',
+    'freepress', 'newslaundry', 'editorial', 'journal', 'news18', 'pedia',
+    'today result', 'matka result', 'satta result'
+}
+
 COMMON_LOCATIONS = {
     'koramangala', 'indiranagar', 'bandra', 'juhu', 'whitefield', 'gurgaon', 'noida',
     'bangalore', 'mumbai', 'delhi', 'hyderabad', 'chennai', 'pune', 'london', 'dubai',
@@ -35,7 +42,13 @@ def format_domain_brand(domain: str) -> str:
 
 def clean_company_brand_name(title: str, domain: str) -> str:
     """Strips SEO headlines and extracts the authentic brand name."""
+    if any(s in (title or '').lower() or s in (domain or '').lower() for s in SPAM_BRAND_KEYWORDS):
+        return ""
+
     fallback_name = format_domain_brand(domain)
+    if any(s in fallback_name.lower() for s in SPAM_BRAND_KEYWORDS):
+        return ""
+
     if not title or title.lower().strip() in COMMON_LOCATIONS:
         return fallback_name
 

@@ -222,7 +222,7 @@ def save_or_update_lead(lead_data: dict) -> bool:
     conn.close()
     return is_new
 
-def get_leads(search="", country="", has_email=False, has_phone=False, has_linkedin=False, service_match="", status="", limit=100, offset=0):
+def get_leads(search="", country="", city="", has_email=False, has_phone=False, has_linkedin=False, service_match="", status="", limit=100, offset=0):
     conn = get_db()
     cursor = conn.cursor()
 
@@ -230,13 +230,17 @@ def get_leads(search="", country="", has_email=False, has_phone=False, has_linke
     params = []
 
     if search:
-        query += " AND (company_name LIKE ? OR domain LIKE ? OR meta_description LIKE ? OR industry_niche LIKE ? OR audit_notes LIKE ?)"
+        query += " AND (company_name LIKE ? OR domain LIKE ? OR meta_description LIKE ? OR industry_niche LIKE ? OR audit_notes LIKE ? OR city LIKE ?)"
         s = f"%{search}%"
-        params.extend([s, s, s, s, s])
+        params.extend([s, s, s, s, s, s])
 
     if country:
         query += " AND country LIKE ?"
         params.append(f"%{country}%")
+
+    if city:
+        query += " AND (city LIKE ? OR meta_description LIKE ?)"
+        params.extend([f"%{city}%", f"%{city}%"])
 
     if service_match:
         query += " AND service_match LIKE ?"
@@ -287,6 +291,10 @@ def get_lead_stats():
     cursor.execute("SELECT DISTINCT country FROM leads WHERE country != ''")
     countries = [r[0] for r in cursor.fetchall()]
 
+    # Top Indian cities
+    cursor.execute("SELECT city, COUNT(*) as c FROM leads WHERE city != '' AND city IS NOT NULL GROUP BY city ORDER BY c DESC LIMIT 15")
+    cities = [r[0] for r in cursor.fetchall()]
+
     # Service breakdown counts
     service_counts = {}
     for svc in ["Chatbots", "Web Development", "App Development", "Automation", "Custom Pipelines"]:
@@ -309,6 +317,7 @@ def get_lead_stats():
         "with_linkedin": with_linkedin,
         "country_count": len(countries),
         "countries": countries[:10],
+        "cities": cities,
         "services": service_counts
     }
 
@@ -319,6 +328,22 @@ def delete_lead(lead_id: int):
     conn.commit()
     conn.close()
 
+def bulk_delete_leads(lead_ids: list) -> int:
+    """Deletes multiple leads by IDs in a single transaction."""
+    if not lead_ids:
+        return 0
+    clean_ids = [int(i) for i in lead_ids if str(i).isdigit()]
+    if not clean_ids:
+        return 0
+    conn = get_db()
+    cursor = conn.cursor()
+    placeholders = ",".join(["?"] * len(clean_ids))
+    cursor.execute(f"DELETE FROM leads WHERE id IN ({placeholders})", clean_ids)
+    deleted_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return deleted_count
+
 def update_lead_status(lead_id: int, status: str):
     conn = get_db()
     cursor = conn.cursor()
@@ -326,15 +351,33 @@ def update_lead_status(lead_id: int, status: str):
     conn.commit()
     conn.close()
 
-def export_to_csv(filepath=None) -> str:
-    """Exports all leads to a clean, professionally formatted CSV ready for CRM and spreadsheet import."""
+def bulk_update_status(lead_ids: list, status: str) -> int:
+    """Updates status for multiple leads by IDs in a single transaction."""
+    if not lead_ids:
+        return 0
+    clean_ids = [int(i) for i in lead_ids if str(i).isdigit()]
+    if not clean_ids:
+        return 0
+    conn = get_db()
+    cursor = conn.cursor()
+    placeholders = ",".join(["?"] * len(clean_ids))
+    params = [status] + clean_ids
+    cursor.execute(f"UPDATE leads SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id IN ({placeholders})", params)
+    updated_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return updated_count
+
+def export_to_csv(filepath=None, lead_ids: list = None) -> str:
+    """Exports all leads or selected leads to a clean, professionally formatted CSV."""
     if not filepath:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filepath = os.path.join(EXPORTS_DIR, f"leads_export_{timestamp}.csv")
 
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("""
+
+    base_query = """
     SELECT 
         status,
         company_name,
@@ -358,8 +401,19 @@ def export_to_csv(filepath=None) -> str:
         tech_stack,
         lead_score,
         created_at
-    FROM leads ORDER BY id DESC
-    """)
+    FROM leads
+    """
+
+    if lead_ids:
+        clean_ids = [int(i) for i in lead_ids if str(i).isdigit()]
+        if clean_ids:
+            placeholders = ",".join(["?"] * len(clean_ids))
+            cursor.execute(f"{base_query} WHERE id IN ({placeholders}) ORDER BY id DESC", clean_ids)
+        else:
+            cursor.execute(f"{base_query} ORDER BY id DESC")
+    else:
+        cursor.execute(f"{base_query} ORDER BY id DESC")
+
     rows = cursor.fetchall()
 
     headers = [

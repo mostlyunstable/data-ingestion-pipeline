@@ -151,8 +151,14 @@
 
       <!-- Action Suite -->
       <div class="flex items-center gap-2 shrink-0">
+        <!-- Targeted Indian Radar Trigger -->
+        <button onclick="openIndianRadarModal()" id="indian-radar-btn" class="btn-tactile px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-medium transition flex items-center gap-1.5 shadow-xs" title="Target Genuine Indian Clients by Metro & Niche">
+          <i class="fa-solid fa-crosshairs text-amber-600 text-xs"></i>
+          <span class="hidden sm:inline font-semibold">Indian Radar</span>
+        </button>
+
         <!-- Self Healing Trigger -->
-        <button onclick="triggerSelfHeal()" id="self-heal-btn" class="btn-tactile px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 bg-white shadow-xs" title="Execute Data Integrity Diagnostics">
+        <button onclick="triggerSelfHeal()" id="self-heal-btn" class="btn-tactile px-3 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 text-xs text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5 bg-white shadow-xs" title="Execute Data Integrity Diagnostics & Anti-Spam Purge">
           <i class="fa-solid fa-shield-halved text-xs text-slate-500"></i>
           <span class="hidden sm:inline">Self-Heal</span>
         </button>
@@ -325,6 +331,46 @@
 
       </div>
 
+      <!-- Indian Business Hubs Filter Strip -->
+      <div class="flex items-center gap-1.5 p-2.5 rounded-xl bg-white border border-slate-200 shadow-xs overflow-x-auto text-xs scrollbar-none">
+        <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 px-2 shrink-0 font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-location-dot text-rose-500"></i> Indian Metros:
+        </span>
+        <button onclick="setCityFilter('')" id="city-pill-all" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 text-white transition shrink-0">
+          All India
+        </button>
+        <button onclick="setCityFilter('Bangalore')" id="city-pill-Bangalore" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0">
+          🇮🇳 Bangalore
+        </button>
+        <button onclick="setCityFilter('Mumbai')" id="city-pill-Mumbai" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0">
+          🇮🇳 Mumbai
+        </button>
+        <button onclick="setCityFilter('Delhi NCR')" id="city-pill-Delhi" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0">
+          🇮🇳 Delhi NCR
+        </button>
+        <button onclick="setCityFilter('Gurgaon')" id="city-pill-Gurgaon" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0">
+          🇮🇳 Gurgaon
+        </button>
+        <button onclick="setCityFilter('Hyderabad')" id="city-pill-Hyderabad" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0">
+          🇮🇳 Hyderabad
+        </button>
+        <button onclick="setCityFilter('Pune')" id="city-pill-Pune" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0">
+          🇮🇳 Pune
+        </button>
+        <button onclick="setCityFilter('Chennai')" id="city-pill-Chennai" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0">
+          🇮🇳 Chennai
+        </button>
+        <button onclick="setCityFilter('Ahmedabad')" id="city-pill-Ahmedabad" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0">
+          🇮🇳 Ahmedabad
+        </button>
+        <button onclick="setCityFilter('Kolkata')" id="city-pill-Kolkata" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0">
+          🇮🇳 Kolkata
+        </button>
+        <button onclick="setCityFilter('Jaipur')" id="city-pill-Jaipur" class="filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0">
+          🇮🇳 Jaipur
+        </button>
+      </div>
+
     </section>
 
     <!-- CARDS VIEW (Clean Minimalist Dossier) -->
@@ -337,12 +383,15 @@
       <table class="w-full text-left text-xs text-slate-700">
         <thead class="bg-slate-50/80 text-slate-500 font-mono uppercase text-[10px] tracking-wider border-b border-slate-200">
           <tr>
+            <th class="py-3 px-3.5 font-medium w-8">
+              <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll(this.checked)" class="w-3.5 h-3.5 rounded text-slate-900 border-slate-300 focus:ring-0 cursor-pointer" title="Select All">
+            </th>
             <th class="py-3 px-3.5 font-medium">Status</th>
             <th class="py-3 px-3.5 font-medium">Business</th>
+            <th class="py-3 px-3.5 font-medium">Location</th>
             <th class="py-3 px-3.5 font-medium">Opportunity</th>
             <th class="py-3 px-3.5 font-medium">Strengths (Praise)</th>
-            <th class="py-3 px-3.5 font-medium">Bottleneck Identified</th>
-            <th class="py-3 px-3.5 font-medium">Direct Inboxes</th>
+            <th class="py-3 px-3.5 font-medium">Direct Inboxes & WhatsApp</th>
             <th class="py-3 px-3.5 text-right font-medium">Action</th>
           </tr>
         </thead>
@@ -480,6 +529,121 @@
     </div>
   </div>
 
+  <!-- Floating Multi-Action Bar -->
+  <div id="bulk-action-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 hidden flex items-center gap-2 px-3 py-2 bg-slate-900/95 text-white rounded-2xl shadow-2xl border border-slate-700 backdrop-blur-md transition-all duration-200">
+    <div class="px-2.5 py-1 text-xs font-mono border-r border-slate-700 flex items-center gap-1.5 shrink-0">
+      <span id="selected-count-badge" class="font-bold text-amber-400">0</span>
+      <span class="text-slate-300">selected</span>
+    </div>
+    <button onclick="bulkMarkStatus('Contacted')" class="btn-tactile px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition shrink-0" title="Mark selected leads as Contacted (Done)">
+      <i class="fa-solid fa-check text-xs"></i>
+      <span>Mark Done</span>
+    </button>
+    <button onclick="bulkMarkStatus('Yet to Explore')" class="btn-tactile px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1.5 shadow-xs transition shrink-0" title="Reset selected leads to Yet to Explore">
+      <i class="fa-regular fa-circle text-xs"></i>
+      <span>Yet to Explore</span>
+    </button>
+    <button onclick="bulkExportSelected()" class="btn-tactile px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1.5 shadow-xs transition shrink-0" title="Export only selected leads to CSV">
+      <i class="fa-solid fa-download text-xs"></i>
+      <span>Export CSV</span>
+    </button>
+    <button onclick="bulkDeleteSelected()" class="btn-tactile px-3 py-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition shrink-0" title="Permanently delete selected leads">
+      <i class="fa-regular fa-trash-can text-xs"></i>
+      <span>Delete</span>
+    </button>
+    <button onclick="clearLeadSelection()" class="btn-tactile px-2 py-1.5 rounded-xl text-slate-400 hover:text-white text-xs transition shrink-0" title="Deselect all">
+      <i class="fa-solid fa-xmark text-xs"></i>
+    </button>
+  </div>
+
+  <!-- Targeted Indian Radar Modal -->
+  <div id="indian-radar-modal" class="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+    <div class="bg-white max-w-lg w-full rounded-2xl p-6 space-y-5 border border-slate-200 shadow-2xl relative modal-sheet">
+      <button onclick="closeIndianRadarModal()" class="btn-tactile absolute top-5 right-5 text-slate-400 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 transition" title="Close (Esc)">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900 text-[10px] font-mono uppercase font-bold flex items-center gap-1">
+            <span>🇮🇳</span> Precision Indian Hunter
+          </span>
+        </div>
+        <h2 class="text-base font-semibold text-slate-900">Target Genuine Indian Clients</h2>
+        <p class="text-xs text-slate-500">Extract verified Indian businesses with Indian WhatsApp numbers, local metro presence, and zero gambling/satta spam.</p>
+      </div>
+
+      <form id="indian-radar-form" onsubmit="submitIndianRadarForm(event)" class="space-y-4 pt-1">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Target Indian Metro / Micro-Market</label>
+          <select id="radar-city" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-slate-400 font-medium">
+            <option value="Bangalore">Bangalore (Indiranagar, Koramangala, Whitefield, HSR)</option>
+            <option value="Mumbai">Mumbai (Bandra, Juhu, Andheri, Powai, SoBo)</option>
+            <option value="Delhi NCR">Delhi NCR (South Ex, GK, Gurgaon Cyber City, Noida)</option>
+            <option value="Gurgaon">Gurgaon (Golf Course Road, Cyber City, Sector 29)</option>
+            <option value="Hyderabad">Hyderabad (Banjara Hills, Jubilee Hills, Hitec City)</option>
+            <option value="Pune">Pune (Koregaon Park, Baner, Aundh, Viman Nagar)</option>
+            <option value="Chennai">Chennai (Anna Nagar, T Nagar, Alwarpet, Adyar)</option>
+            <option value="Ahmedabad">Ahmedabad (SG Highway, Bodakdev, Prahlad Nagar)</option>
+            <option value="Kolkata">Kolkata (Park Street, Salt Lake, Ballygunge)</option>
+            <option value="Jaipur">Jaipur (C Scheme, Vaishali Nagar, Malviya Nagar)</option>
+            <option value="Kochi">Kochi (Panampilly Nagar, Kakkanad)</option>
+            <option value="Chandigarh">Chandigarh (Sector 17, Sector 35, Mohali)</option>
+            <option value="Indore">Indore (Vijay Nagar, Palasia)</option>
+            <option value="Goa">Goa (Panjim, Porvorim, Candolim)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Commercial Niche / Vertical</label>
+          <select id="radar-niche" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-slate-400 font-medium">
+            <option value="Cosmetic dental clinic">Cosmetic Dental Clinic (High Ticket)</option>
+            <option value="Aesthetic dermatology skin clinic">Aesthetic Dermatology & Skin Clinic</option>
+            <option value="Clear aligners orthodontics clinic">Clear Aligners & Orthodontics Specialist</option>
+            <option value="Hair transplant restoration clinic">Hair Transplant & Restoration Clinic</option>
+            <option value="IVF fertility reproductive center">IVF Fertility & Reproductive Center</option>
+            <option value="Artisan silver jewelry brand Shopify">Artisan Silver Jewelry Brand (Shopify/D2C)</option>
+            <option value="Clean organic skincare brand Shopify">Clean Organic Skincare Brand (Shopify/D2C)</option>
+            <option value="Specialty coffee roastery ecommerce">Specialty Coffee Roastery (Ecommerce)</option>
+            <option value="Luxury boutique interior design studio">Luxury Interior Design Studio</option>
+            <option value="Boutique architectural practice">Boutique Architectural Practice</option>
+            <option value="Corporate M&A law firm boutique">Corporate Law Boutique Firm</option>
+            <option value="Performance marketing growth agency">Performance Marketing Agency</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Target Quantity</label>
+            <select id="radar-limit" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-slate-400 font-medium">
+              <option value="10">10 Verified Leads</option>
+              <option value="15" selected>15 Verified Leads</option>
+              <option value="25">25 Verified Leads</option>
+              <option value="50">50 Verified Leads</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Anti-Spam Filter</label>
+            <div class="text-[11px] p-2 bg-slate-50 border border-slate-200 rounded-lg text-emerald-800 flex items-center gap-1.5 h-[38px] font-medium">
+              <i class="fa-solid fa-shield-halved text-emerald-600 text-xs"></i>
+              <span>Active Satta/Junk Shield</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeIndianRadarModal()" class="btn-tactile px-4 py-2 rounded-lg border border-slate-200 hover:border-slate-300 text-xs font-medium text-slate-700 bg-white">
+            Cancel
+          </button>
+          <button type="submit" id="radar-submit-btn" class="btn-tactile px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-crosshairs text-xs"></i>
+            <span>Launch Precision Radar</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     // State management
     let currentLeads = [];
@@ -488,12 +652,14 @@
     let searchDebounceTimeout = null;
     let selectedServiceFilter = '';
     let selectedCountryFilter = '';
+    let selectedCityFilter = '';
     let selectedStatusFilter = '';
     let filterEmailOnly = false;
     let filterPhoneOnly = false;
     let filterLinkedinOnly = false;
     let currentViewMode = 'cards';
     let availableCountries = [];
+    let selectedLeadIds = new Set();
 
     // Toast Notification System
     function showToast(message, type = 'info', duration = 2400) {
@@ -663,6 +829,247 @@
       loadLeads();
     }
 
+    // Indian Metro Filter Pills
+    function setCityFilter(city) {
+      selectedCityFilter = city;
+      const pillMap = {
+        '': 'city-pill-all',
+        'Bangalore': 'city-pill-Bangalore',
+        'Mumbai': 'city-pill-Mumbai',
+        'Delhi NCR': 'city-pill-Delhi',
+        'Gurgaon': 'city-pill-Gurgaon',
+        'Hyderabad': 'city-pill-Hyderabad',
+        'Pune': 'city-pill-Pune',
+        'Chennai': 'city-pill-Chennai',
+        'Ahmedabad': 'city-pill-Ahmedabad',
+        'Kolkata': 'city-pill-Kolkata',
+        'Jaipur': 'city-pill-Jaipur'
+      };
+
+      Object.entries(pillMap).forEach(([c, id]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (c === city) {
+          el.className = "filter-pill px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-900 text-white transition shrink-0";
+        } else {
+          el.className = "filter-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition shrink-0";
+        }
+      });
+
+      showToast(city ? `Filtered: 🇮🇳 ${city}` : 'Showing All India', 'info', 1200);
+      loadLeads();
+    }
+
+    // Targeted Indian Radar Modal
+    function openIndianRadarModal() {
+      document.getElementById('indian-radar-modal').classList.remove('hidden');
+    }
+
+    function closeIndianRadarModal() {
+      document.getElementById('indian-radar-modal').classList.add('hidden');
+    }
+
+    async function submitIndianRadarForm(event) {
+      event.preventDefault();
+      const city = document.getElementById('radar-city').value;
+      const niche = document.getElementById('radar-niche').value;
+      const limit = document.getElementById('radar-limit').value;
+
+      const submitBtn = document.getElementById('radar-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Targeting ${city}...</span>`;
+
+      try {
+        const formData = new FormData();
+        formData.append('city', city);
+        formData.append('niche', niche);
+        formData.append('limit', limit);
+
+        const res = await fetch('/api/harvest-indian', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+          closeIndianRadarModal();
+          showToast(`Radar launched for ${niche} in ${city}!`, 'success');
+          startLivePolling();
+        } else {
+          showToast(data.message || 'Error launching radar', 'info');
+        }
+      } catch (err) {
+        showToast('Failed to trigger Indian radar: ' + err, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fa-solid fa-crosshairs text-xs"></i> <span>Launch Precision Radar</span>`;
+      }
+    }
+
+    // Purge Spam Protocol
+    async function triggerPurgeSpam() {
+      const btn = document.getElementById('self-heal-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Purging...</span>`;
+      try {
+        const res = await fetch('/api/purge-spam', { method: 'POST' });
+        const data = await res.json();
+        await loadAllData();
+        const resObj = data.result || {};
+        showToast(`Spam purge complete: ${resObj.purged_spam_records || 0} junk purged!`, 'success');
+        btn.innerHTML = `<i class="fa-solid fa-check text-xs"></i> <span>Purged</span>`;
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-shield-halved text-xs text-slate-500"></i> <span>Self-Heal</span>`;
+        }, 2500);
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-shield-halved text-xs text-slate-500"></i> <span>Self-Heal</span>`;
+        showToast('Purge error: ' + err, 'error');
+      }
+    }
+
+    // Multi-Selection and Bulk Operations
+    function toggleSelectLead(leadId, isChecked) {
+      if (isChecked) {
+        selectedLeadIds.add(leadId);
+      } else {
+        selectedLeadIds.delete(leadId);
+      }
+      const card = document.getElementById(`lead-card-${leadId}`);
+      if (card) {
+        if (isChecked) {
+          card.classList.add('ring-2', 'ring-slate-900', 'bg-slate-50/50');
+        } else {
+          card.classList.remove('ring-2', 'ring-slate-900', 'bg-slate-50/50');
+        }
+      }
+      updateBulkActionBar();
+    }
+
+    function toggleSelectAll(isChecked) {
+      if (isChecked) {
+        currentLeads.forEach(l => selectedLeadIds.add(l.id));
+      } else {
+        selectedLeadIds.clear();
+      }
+      document.querySelectorAll('.lead-card-checkbox').forEach(cb => cb.checked = isChecked);
+      document.querySelectorAll('.lead-row-checkbox').forEach(cb => cb.checked = isChecked);
+      currentLeads.forEach(l => {
+        const card = document.getElementById(`lead-card-${l.id}`);
+        if (card) {
+          if (isChecked) {
+            card.classList.add('ring-2', 'ring-slate-900', 'bg-slate-50/50');
+          } else {
+            card.classList.remove('ring-2', 'ring-slate-900', 'bg-slate-50/50');
+          }
+        }
+      });
+      updateBulkActionBar();
+    }
+
+    function clearLeadSelection() {
+      selectedLeadIds.clear();
+      document.querySelectorAll('.lead-card-checkbox').forEach(cb => cb.checked = false);
+      document.querySelectorAll('.lead-row-checkbox').forEach(cb => cb.checked = false);
+      const selectAll = document.getElementById('select-all-checkbox');
+      if (selectAll) selectAll.checked = false;
+      document.querySelectorAll('.card-minimal').forEach(c => c.classList.remove('ring-2', 'ring-slate-900', 'bg-slate-50/50'));
+      updateBulkActionBar();
+    }
+
+    function updateBulkActionBar() {
+      const bar = document.getElementById('bulk-action-bar');
+      const badge = document.getElementById('selected-count-badge');
+      const selectAll = document.getElementById('select-all-checkbox');
+
+      if (selectedLeadIds.size > 0) {
+        bar.classList.remove('hidden');
+        badge.innerText = selectedLeadIds.size;
+      } else {
+        bar.classList.add('hidden');
+      }
+
+      if (selectAll && currentLeads.length > 0) {
+        selectAll.checked = selectedLeadIds.size === currentLeads.length;
+      }
+    }
+
+    async function bulkMarkStatus(status) {
+      if (selectedLeadIds.size === 0) return;
+      const ids = Array.from(selectedLeadIds);
+      try {
+        const res = await fetch('/api/leads/bulk-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_ids: ids, status: status })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`Updated ${data.updated_count} leads to "${status}"`, 'success');
+          currentLeads.forEach(l => {
+            if (selectedLeadIds.has(l.id)) l.status = status;
+          });
+          clearLeadSelection();
+          renderAllViews(currentLeads);
+          loadStats();
+        }
+      } catch (e) {
+        showToast('Bulk update failed: ' + e, 'error');
+      }
+    }
+
+    async function bulkDeleteSelected() {
+      if (selectedLeadIds.size === 0) return;
+      const count = selectedLeadIds.size;
+      if (!confirm(`Are you sure you want to dismiss and delete ${count} selected lead(s)?`)) return;
+
+      const ids = Array.from(selectedLeadIds);
+      try {
+        const res = await fetch('/api/leads/bulk-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_ids: ids })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`Deleted ${data.deleted_count} leads from pipeline`, 'success');
+          currentLeads = currentLeads.filter(l => !selectedLeadIds.has(l.id));
+          clearLeadSelection();
+          renderAllViews(currentLeads);
+          loadStats();
+        }
+      } catch (e) {
+        showToast('Bulk delete failed: ' + e, 'error');
+      }
+    }
+
+    async function bulkExportSelected() {
+      if (selectedLeadIds.size === 0) return;
+      const ids = Array.from(selectedLeadIds);
+      try {
+        showToast(`Preparing export for ${ids.length} selected leads...`, 'info');
+        const res = await fetch('/api/leads/bulk-export', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_ids: ids })
+        });
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `selected_indian_leads_${ids.length}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          showToast(`Downloaded CSV with ${ids.length} leads`, 'success');
+        }
+      } catch (e) {
+        showToast('Export failed: ' + e, 'error');
+      }
+    }
+
     // Interactive KPI Metric Power Filters
     function toggleKpiFilter(type) {
       ['kpi-total', 'kpi-emails', 'kpi-phones', 'kpi-linkedin'].forEach(id => {
@@ -754,10 +1161,12 @@
     function resetAllFilters() {
       selectedServiceFilter = '';
       selectedCountryFilter = '';
+      selectedCityFilter = '';
       selectedStatusFilter = '';
       filterEmailOnly = false;
       filterPhoneOnly = false;
       filterLinkedinOnly = false;
+      clearLeadSelection();
       document.getElementById('filter-search').value = '';
       document.getElementById('clear-search-btn').classList.add('hidden');
 
@@ -768,11 +1177,12 @@
 
       document.getElementById('country-active-tag').innerText = 'Cycle';
       document.getElementById('country-active-tag').classList.add('opacity-0');
-      document.getElementById('country-subtitle').innerText = 'India, US, UK, Global';
+      document.getElementById('country-subtitle').innerText = 'India & Commercial Hubs';
 
+      setCityFilter('');
       setServiceFilter('');
       setStatusFilter('');
-      showToast('All filters reset • Showing full warehouse', 'info');
+      showToast('All filters reset • Showing full Indian warehouse', 'info');
     }
 
     // Search Input Controls
@@ -878,6 +1288,7 @@
         search: search,
         service_match: selectedServiceFilter,
         country: selectedCountryFilter,
+        city: selectedCityFilter,
         status: selectedStatusFilter,
         has_email: filterEmailOnly,
         has_phone: filterPhoneOnly,
@@ -889,6 +1300,7 @@
         const data = await res.json();
         currentLeads = data.leads || [];
         renderAllViews(currentLeads);
+        updateBulkActionBar();
       } catch (e) {
         console.error("Leads load error", e);
         showToast('Error loading leads', 'error');
@@ -904,6 +1316,7 @@
         emptyState.classList.remove('hidden');
         cardsContainer.innerHTML = '';
         tableBody.innerHTML = '';
+        clearLeadSelection();
         
         const titleEl = document.getElementById('empty-state-title');
         const descEl = document.getElementById('empty-state-desc');
@@ -923,6 +1336,7 @@
       emptyState.classList.add('hidden');
       renderCards(leads);
       renderTable(leads);
+      updateBulkActionBar();
     }
 
     // Direct Action Handlers (Email, Phone, WhatsApp)
@@ -956,7 +1370,7 @@
       markLeadAsContacted(leadId);
     }
 
-    // Render Minimalist Cards View with Status Checkmark & Overlap Protection
+    // Render Minimalist Cards View with Multi-Select, WhatsApp & Indian Metro Tags
     function renderCards(leads) {
       const container = document.getElementById('cards-container');
       container.innerHTML = leads.map(lead => {
@@ -966,6 +1380,7 @@
         const contactName = lead.contact_name ? lead.contact_name : 'Founding & Leadership Team';
         const safeCompany = (lead.company_name || lead.domain).replace(/'/g, "\\'");
         const isDone = lead.status === 'Contacted' || lead.status === 'Done';
+        const isSelected = selectedLeadIds.has(lead.id);
 
         // Contact action triggers
         let contactButtons = [];
@@ -992,9 +1407,9 @@
           if (digits.length >= 10) {
             contactButtons.push(`
               <button onclick="handleWhatsAppClick(event, '${digits}', ${lead.id})" 
-                      class="btn-tactile px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-mono flex items-center gap-1.5 transition shrink-0" 
+                      class="btn-tactile px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-[11px] font-mono flex items-center gap-1.5 transition shadow-2xs shrink-0" 
                       title="Open WhatsApp chat with pre-filled pitch">
-                <i class="fa-brands fa-whatsapp text-xs text-slate-500"></i> WhatsApp
+                <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
               </button>
             `);
           }
@@ -1016,21 +1431,22 @@
         `;
 
         return `
-          <div id="lead-card-${lead.id}" class="card-minimal p-4 rounded-xl flex flex-col justify-between space-y-3.5 shadow-2xs min-w-0">
+          <div id="lead-card-${lead.id}" class="card-minimal p-4 rounded-xl flex flex-col justify-between space-y-3.5 shadow-2xs min-w-0 ${isSelected ? 'ring-2 ring-slate-900 bg-slate-50/50' : ''}">
             
-            <!-- Card Header: Badges & Status -->
+            <!-- Card Header: Badges, Checkbox & Status -->
             <div class="space-y-2 min-w-0">
               <div class="flex items-center justify-between gap-1.5 min-w-0">
-                <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
+                <div class="flex items-center gap-2 min-w-0 flex-wrap">
+                  <input type="checkbox" onchange="toggleSelectLead(${lead.id}, this.checked)" class="lead-card-checkbox w-4 h-4 rounded text-slate-900 border-slate-300 focus:ring-0 cursor-pointer" ${isSelected ? 'checked' : ''} title="Select lead">
                   <button onclick="setServiceFilter('${lead.service_match}')" 
                           class="btn-tactile px-2 py-0.5 rounded-md text-[10px] font-mono uppercase tracking-wider bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition shrink-0" 
                           title="Click to filter by ${lead.service_match}">
                     ${lead.service_match || 'Digital'}
                   </button>
-                  <button onclick="filterByCardCountry('${lead.country}')" 
-                          class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200 transition shrink-0" 
-                          title="Click to filter by ${lead.country || 'Global'}">
-                    ${lead.country || 'Global'}
+                  <button onclick="setCityFilter('${lead.city || ''}')" 
+                          class="btn-tactile px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition shrink-0 flex items-center gap-1" 
+                          title="Click to filter by ${lead.city || 'India'}">
+                    <span>🇮🇳</span> ${lead.city || 'India'}
                   </button>
                 </div>
                 ${statusBadgeHtml}
@@ -1053,12 +1469,12 @@
             <!-- Diagnostic Dossier -->
             <div class="space-y-1.5 text-xs min-w-0">
               <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 min-w-0">
-                <span class="font-mono text-[9px] uppercase tracking-wider text-emerald-800 font-semibold block mb-0.5">✓ Advantage:</span>
+                <span class="font-mono text-[9px] uppercase tracking-wider text-emerald-800 font-semibold block mb-0.5">✓ Established Advantage:</span>
                 <span class="text-slate-700 text-[11px] wrap-safe block leading-relaxed">${lead.where_they_are_good || 'Solid online presence'}</span>
               </div>
 
               <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 min-w-0">
-                <span class="font-mono text-[9px] uppercase tracking-wider text-rose-800 font-semibold block mb-0.5">✕ Opportunity:</span>
+                <span class="font-mono text-[9px] uppercase tracking-wider text-rose-800 font-semibold block mb-0.5">✕ Identified Flaw / Bottleneck:</span>
                 <span class="text-slate-700 text-[11px] wrap-safe block leading-relaxed">${lead.where_they_are_lacking || lead.opportunity_type || 'Digital bottleneck'}</span>
               </div>
             </div>
@@ -1088,7 +1504,7 @@
       }).join('');
     }
 
-    // Render Table View with Status Toggle & Overlap-Proof Cells
+    // Render Table View with Multi-Select, Location Column & WhatsApp
     function renderTable(leads) {
       const tbody = document.getElementById('table-body');
       tbody.innerHTML = leads.map(lead => {
@@ -1097,6 +1513,7 @@
         const websiteUrl = lead.website && lead.website.startsWith('http') ? lead.website : `https://${lead.domain}`;
         const safeCompany = (lead.company_name || lead.domain).replace(/'/g, "\\'");
         const isDone = lead.status === 'Contacted' || lead.status === 'Done';
+        const isSelected = selectedLeadIds.has(lead.id);
 
         const statusPill = isDone ? `
           <button onclick="toggleLeadStatus(${lead.id}, event)" 
@@ -1113,7 +1530,10 @@
         `;
 
         return `
-          <tr id="lead-row-${lead.id}" class="hover:bg-slate-50/70 transition group">
+          <tr id="lead-row-${lead.id}" class="hover:bg-slate-50/70 transition group ${isSelected ? 'bg-slate-50' : ''}">
+            <td class="py-3 px-3.5 whitespace-nowrap">
+              <input type="checkbox" onchange="toggleSelectLead(${lead.id}, this.checked)" class="lead-row-checkbox w-3.5 h-3.5 rounded text-slate-900 border-slate-300 focus:ring-0 cursor-pointer" ${isSelected ? 'checked' : ''}>
+            </td>
             <td class="py-3 px-3.5 whitespace-nowrap">
               ${statusPill}
             </td>
@@ -1125,6 +1545,13 @@
               </a>
               <div class="text-[10px] text-slate-500 font-mono truncate">${lead.domain}</div>
             </td>
+            <td class="py-3 px-3.5 whitespace-nowrap">
+              <button onclick="setCityFilter('${lead.city || ''}')" 
+                      class="btn-tactile hover:underline text-slate-700 font-mono text-[11px] inline-flex items-center gap-1" 
+                      title="Filter by ${lead.city || 'India'}">
+                <span>🇮🇳</span> ${lead.city || 'India'}
+              </button>
+            </td>
             <td class="py-3 px-3.5 font-mono text-[11px] text-slate-700 whitespace-nowrap">
               <button onclick="setServiceFilter('${lead.service_match}')" 
                       class="btn-tactile hover:underline text-left text-slate-800" 
@@ -1135,10 +1562,7 @@
             <td class="py-3 px-3.5 max-w-[200px] text-slate-600 text-xs wrap-safe leading-normal">
               ${lead.where_they_are_good || '-'}
             </td>
-            <td class="py-3 px-3.5 max-w-[200px] text-slate-700 text-xs font-medium wrap-safe leading-normal">
-              ${lead.where_they_are_lacking || '-'}
-            </td>
-            <td class="py-3 px-3.5 font-mono text-[11px] space-y-1 max-w-[160px]">
+            <td class="py-3 px-3.5 font-mono text-[11px] space-y-1 max-w-[180px]">
               ${emails.length > 0 ? `
                 <button onclick="handleEmailClick(event, '${emails[0]}', '${safeCompany}', ${lead.id})" 
                         class="btn-tactile text-slate-800 hover:text-slate-900 hover:underline flex items-center gap-1 max-w-full" 
@@ -1148,11 +1572,20 @@
                 </button>
               ` : ''}
               ${phones.length > 0 ? `
-                <button onclick="handlePhoneClick(event, '${phones[0]}')" 
-                        class="btn-tactile text-slate-600 hover:text-slate-900 hover:underline flex items-center gap-1 truncate max-w-full" 
-                        title="Click to copy phone">
-                  <i class="fa-solid fa-phone text-[9px] text-slate-400 shrink-0"></i> ${phones[0]}
-                </button>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <button onclick="handlePhoneClick(event, '${phones[0]}')" 
+                          class="btn-tactile text-slate-600 hover:text-slate-900 hover:underline flex items-center gap-1 truncate" 
+                          title="Click to copy phone">
+                    <i class="fa-solid fa-phone text-[9px] text-slate-400 shrink-0"></i> ${phones[0]}
+                  </button>
+                  ${phones[0].replace(/\D/g, '').length >= 10 ? `
+                    <button onclick="handleWhatsAppClick(event, '${phones[0].replace(/\D/g, '')}', ${lead.id})" 
+                            class="btn-tactile px-1.5 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] flex items-center gap-1 font-mono transition" 
+                            title="WhatsApp">
+                      <i class="fa-brands fa-whatsapp"></i> WA
+                    </button>
+                  ` : ''}
+                </div>
               ` : ''}
               ${emails.length === 0 && phones.length === 0 ? '<span class="text-slate-400 italic">None</span>' : ''}
             </td>
@@ -1259,6 +1692,7 @@
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeModal();
+        closeIndianRadarModal();
       }
     });
 

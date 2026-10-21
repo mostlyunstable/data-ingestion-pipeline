@@ -64,6 +64,18 @@ def run_self_healing_cycle() -> dict:
             deleted_count += 1
             continue
 
+        # Check for spam, gambling, satta matka, or news publisher keywords
+        c_lower = (company_name or "").lower()
+        d_lower = (domain or "").lower()
+        if any(spam in c_lower or spam in d_lower for spam in [
+            "satta", "matka", "dpboss", "kalyan", "bazar", "bazaar", "result",
+            "gambling", "lottery", "betting", "pedia", "freepress", "newslaundry",
+            "medicalnewstoday", "iadvl.org", "editorial", "journal"
+        ]):
+            cursor.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
+            deleted_count += 1
+            continue
+
         # 1. Clean Emails & Phones
         clean_emails = sanitize_email_list(emails_raw or "", domain or "")
         clean_phones = sanitize_phone_list(phones_raw or "")
@@ -76,6 +88,36 @@ def run_self_healing_cycle() -> dict:
 
         # 3. Clean Company Name
         clean_name = clean_company_brand_name(company_name or "", domain or "")
+        if not clean_name or len(clean_name) < 2:
+            cursor.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
+            deleted_count += 1
+            continue
+
+        # 4. Indian Commercial Client Verification Gate (Purges international/non-Indian leads)
+        cursor.execute("SELECT country, city, meta_description FROM leads WHERE id = ?", (lead_id,))
+        meta_row = cursor.fetchone()
+        l_country = meta_row[0] if meta_row else ""
+        l_city = meta_row[1] if meta_row else ""
+        l_desc = meta_row[2] if meta_row else ""
+
+        phones_str = " ".join(clean_phones)
+        is_indian = (
+            l_country == "India" or
+            "+91" in phones_str or
+            domain.endswith(".in") or
+            domain.endswith(".co.in") or
+            any(k in (l_city + " " + (l_desc or "")).lower() for k in [
+                "bangalore", "bengaluru", "mumbai", "delhi", "gurgaon", "gurugram", "noida",
+                "hyderabad", "pune", "chennai", "kolkata", "ahmedabad", "jaipur", "kochi",
+                "chandigarh", "indore", "surat", "lucknow", "coimbatore", "goa", "india"
+            ])
+        )
+        if not is_indian:
+            cursor.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
+            deleted_count += 1
+            continue
+        else:
+            cursor.execute("UPDATE leads SET country = 'India' WHERE id = ?", (lead_id,))
 
         # 4. Clean Contact Decision Maker Name & Infer from email
         clean_contact = (contact_raw or "").strip()

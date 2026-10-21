@@ -5,13 +5,16 @@ Serves real-time REST endpoints and the interactive visual dashboard.
 import io
 import csv
 import asyncio
-from fastapi import FastAPI, BackgroundTasks, UploadFile, File, Form, Query
+from typing import List, Optional
+from pydantic import BaseModel
+from fastapi import FastAPI, BackgroundTasks, UploadFile, File, Form, Query, Request
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from config import BASE_DIR
 from core.database import (
     init_db, get_leads, get_lead_stats, delete_lead,
-    update_lead_status, export_to_csv
+    update_lead_status, bulk_delete_leads, bulk_update_status,
+    export_to_csv
 )
 from core.pipeline import (
     job_state, run_niche_radar_pipeline, run_pipeline_for_urls
@@ -37,10 +40,25 @@ def startup_event():
     if not os.environ.get("VERCEL"):
         autopilot_daemon.start(interval_minutes=30)
 
+class BulkStatusRequest(BaseModel):
+    lead_ids: List[int]
+    status: str
+
+class BulkDeleteRequest(BaseModel):
+    lead_ids: List[int]
+
+class BulkExportRequest(BaseModel):
+    lead_ids: Optional[List[int]] = None
+
 @app.post("/api/self-heal")
 async def api_trigger_self_heal():
     res = run_self_healing_cycle()
     return res
+
+@app.post("/api/purge-spam")
+async def api_purge_spam():
+    res = run_self_healing_cycle()
+    return {"status": "success", "result": res}
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_dashboard():
@@ -80,6 +98,7 @@ async def api_autopilot_run_now(background_tasks: BackgroundTasks, batch_size: i
 async def api_get_leads(
     search: str = Query("", description="Keyword search"),
     country: str = Query("", description="Country filter"),
+    city: str = Query("", description="City filter"),
     service_match: str = Query("", description="Filter by service match"),
     has_email: bool = Query(False, description="Filter leads with email only"),
     has_phone: bool = Query(False, description="Filter leads with phone only"),
@@ -91,6 +110,7 @@ async def api_get_leads(
     leads = get_leads(
         search=search,
         country=country,
+        city=city,
         service_match=service_match,
         has_email=has_email,
         has_phone=has_phone,
@@ -100,6 +120,23 @@ async def api_get_leads(
         offset=offset
     )
     return {"leads": leads}
+
+@app.post("/api/harvest-indian")
+async def api_harvest_indian(
+    background_tasks: BackgroundTasks,
+    city: str = Form("Bangalore"),
+    niche: str = Form("Cosmetic dental clinic"),
+    limit: int = Form(15)
+):
+    if job_state.is_running:
+        return JSONResponse({"status": "error", "message": "A pipeline sweep is already active!"}, status_code=400)
+
+    location = f"{city}, India"
+    background_tasks.add_task(run_niche_radar_pipeline, niche, location, limit)
+    return {
+        "status": "started",
+        "message": f"Precision radar initiated for '{niche}' in {location} ({limit} targets)."
+    }
 
 @app.post("/api/start-hunt")
 async def api_start_hunt(
@@ -189,6 +226,21 @@ async def api_toggle_status(lead_id: int):
 async def api_delete_lead(lead_id: int):
     delete_lead(lead_id)
     return {"status": "success", "lead_id": lead_id}
+
+@app.post("/api/leads/bulk-status")
+async def api_bulk_status(req: BulkStatusRequest):
+    updated = bulk_update_status(req.lead_ids, req.status)
+    return {"status": "success", "updated_count": updated, "new_status": req.status}
+
+@app.post("/api/leads/bulk-delete")
+async def api_bulk_delete(req: BulkDeleteRequest):
+    deleted = bulk_delete_leads(req.lead_ids)
+    return {"status": "success", "deleted_count": deleted}
+
+@app.post("/api/leads/bulk-export")
+async def api_bulk_export(req: BulkExportRequest):
+    filepath = export_to_csv(lead_ids=req.lead_ids)
+    return FileResponse(filepath, filename="selected_leads_export.csv", media_type="text/csv")
 
 @app.get("/api/export-csv")
 async def api_export_csv():
