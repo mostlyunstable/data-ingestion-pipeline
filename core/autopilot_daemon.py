@@ -16,6 +16,7 @@ class AutopilotDaemon:
         self.total_cycles = 0
         self.last_cycle_time = None
         self.interval_seconds = 1800  # Default 30 minutes between continuous sweeps
+        self.initial_delay_seconds = 15
         self._thread = None
         self._loop = None
 
@@ -96,6 +97,12 @@ class AutopilotDaemon:
 
     def _run_loop(self):
         asyncio.set_event_loop(self._loop)
+        # Allow server to bind and accept HTTP traffic smoothly before first sweep
+        for _ in range(self.initial_delay_seconds):
+            if not self.is_active:
+                return
+            time.sleep(1)
+
         while self.is_active:
             try:
                 self._loop.run_until_complete(self.execute_single_cycle())
@@ -108,11 +115,12 @@ class AutopilotDaemon:
                     break
                 time.sleep(1)
 
-    def start(self, interval_minutes: int = 30):
+    def start(self, interval_minutes: int = 30, initial_delay_seconds: int = 15):
         if self.is_active:
             return
         self.is_active = True
         self.interval_seconds = interval_minutes * 60
+        self.initial_delay_seconds = initial_delay_seconds
         self._loop = asyncio.new_event_loop()
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()

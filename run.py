@@ -25,10 +25,10 @@ def main():
     print("✓ Database ready at: data/leads.db")
 
     port = 8000
-    host = "127.0.0.1"
-    url = f"http://{host}:{port}"
+    host = "0.0.0.0"
+    url = f"http://127.0.0.1:{port}"
 
-    print(f"» Starting Web Control Center on {url}...")
+    print(f"» Starting Web Control Center on {url} (listening on {host}:{port})...")
     print("» Launching your web browser automatically in 1.5 seconds...")
 
     def open_browser():

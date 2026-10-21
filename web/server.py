@@ -33,12 +33,13 @@ app.add_middleware(
 )
 
 @app.on_event("startup")
-def startup_event():
+async def startup_event():
     init_db()
-    run_self_healing_cycle()
     import os
     if not os.environ.get("VERCEL"):
-        autopilot_daemon.start(interval_minutes=30)
+        loop = asyncio.get_event_loop()
+        loop.run_in_executor(None, run_self_healing_cycle)
+        autopilot_daemon.start(interval_minutes=30, initial_delay_seconds=20)
 
 class BulkStatusRequest(BaseModel):
     lead_ids: List[int]
