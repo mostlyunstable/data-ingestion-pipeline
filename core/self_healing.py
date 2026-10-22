@@ -9,12 +9,12 @@ from transformers.opportunity_auditor import STOP_WORDS_AND_TITLES, infer_name_f
 from extractors.search_radar import SKIP_DOMAINS, clean_target_domain
 
 def sanitize_email_list(emails_str: str, domain: str) -> list:
-    """Uses canonical email cleaner to filter list."""
+    """Uses canonical email cleaner to filter list (fast regex/string sanitation without repeat DNS MX calls)."""
     if not emails_str:
         return []
     clean_emails = []
     for e in emails_str.split(','):
-        c = clean_email(e.strip(), domain)
+        c = clean_email(e.strip(), domain, check_mx=False)
         if c:
             clean_emails.append(c)
     return sorted(list(dict.fromkeys(clean_emails)))
@@ -47,7 +47,8 @@ def run_self_healing_cycle() -> dict:
 
     cursor.execute("""
     SELECT id, domain, company_name, website, emails, phones,
-           confident_pitch, pitch_hook, contact_name
+           confident_pitch, pitch_hook, contact_name,
+           country, city, meta_description
     FROM leads
     """)
     rows = cursor.fetchall()
@@ -56,7 +57,10 @@ def run_self_healing_cycle() -> dict:
     deleted_count = 0
 
     for row in rows:
-        lead_id, domain, company_name, website, emails_raw, phones_raw, pitch, hook, contact_raw = row
+        (
+            lead_id, domain, company_name, website, emails_raw, phones_raw,
+            pitch, hook, contact_raw, l_country, l_city, l_desc
+        ) = row
 
         # 0. Check if domain is qualified commercial prospect
         if not clean_target_domain(f"https://{domain}"):
@@ -94,19 +98,17 @@ def run_self_healing_cycle() -> dict:
             continue
 
         # 4. Indian Commercial Client Verification Gate (Purges international/non-Indian leads)
-        cursor.execute("SELECT country, city, meta_description FROM leads WHERE id = ?", (lead_id,))
-        meta_row = cursor.fetchone()
-        l_country = meta_row[0] if meta_row else ""
-        l_city = meta_row[1] if meta_row else ""
-        l_desc = meta_row[2] if meta_row else ""
+        l_country_str = l_country or ""
+        l_city_str = l_city or ""
+        l_desc_str = l_desc or ""
 
         phones_str = " ".join(clean_phones)
         is_indian = (
-            l_country == "India" or
+            l_country_str == "India" or
             "+91" in phones_str or
             domain.endswith(".in") or
             domain.endswith(".co.in") or
-            any(k in (l_city + " " + (l_desc or "")).lower() for k in [
+            any(k in (l_city_str + " " + l_desc_str).lower() for k in [
                 "bangalore", "bengaluru", "mumbai", "delhi", "gurgaon", "gurugram", "noida",
                 "hyderabad", "pune", "chennai", "kolkata", "ahmedabad", "jaipur", "kochi",
                 "chandigarh", "indore", "surat", "lucknow", "coimbatore", "goa", "india"
@@ -116,10 +118,8 @@ def run_self_healing_cycle() -> dict:
             cursor.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
             deleted_count += 1
             continue
-        else:
-            cursor.execute("UPDATE leads SET country = 'India' WHERE id = ?", (lead_id,))
 
-        # 4. Clean Contact Decision Maker Name & Infer from email
+        # 5. Clean Contact Decision Maker Name & Infer from email
         clean_contact = (contact_raw or "").strip()
         if clean_contact and not is_valid_name(clean_contact, domain or ""):
             clean_contact = ""
@@ -129,12 +129,12 @@ def run_self_healing_cycle() -> dict:
             if not is_valid_name(clean_contact, domain or ""):
                 clean_contact = ""
 
-        # 5. Clean Website
+        # 6. Clean Website
         clean_website = website.strip() if website else f"https://{domain}"
         if not clean_website.startswith("http://") and not clean_website.startswith("https://"):
             clean_website = f"https://{clean_website}"
 
-        # 6. Repair Pitch & Hook greetings
+        # 7. Repair Pitch & Hook greetings
         clean_pitch = pitch or ""
         clean_hook = hook or ""
 
@@ -153,13 +153,14 @@ def run_self_healing_cycle() -> dict:
             clean_hook = re.sub(r'^(?:Hi|Hello|Hey)\s+[^!\n]+[!\n]\s*', f'{greeting}! ', clean_hook)
             clean_hook = re.sub(r'(Love what you\'re doing with\s+).*?(—especially)', rf'\g<1>{clean_name}\g<2>', clean_hook)
 
-        # Update record
+        # Update record (including verified country = 'India' in single statement)
         cursor.execute("""
         UPDATE leads SET
             company_name = ?,
             website = ?,
             emails = ?,
             phones = ?,
+            country = 'India',
             contact_name = ?,
             confident_pitch = ?,
             pitch_hook = ?
