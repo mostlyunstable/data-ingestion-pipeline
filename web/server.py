@@ -266,3 +266,12 @@ async def api_download_docs(format: str = Query("markdown")):
             filename="OmniLead_Pipeline_Architecture.md",
             media_type="text/markdown"
         )
+
+@app.get("/documentation")
+async def get_documentation():
+    """Serves the interactive HTML architecture documentation."""
+    import os
+    filepath = os.path.join(BASE_DIR, "OMNILEAD_DOCUMENTATION.html")
+    if os.path.exists(filepath):
+        return FileResponse(filepath, media_type="text/html")
+    return HTMLResponse("<h1>Documentation not found</h1>", status_code=404)
