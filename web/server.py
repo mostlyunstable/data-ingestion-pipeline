@@ -61,6 +61,14 @@ async def api_purge_spam():
     res = run_self_healing_cycle()
     return {"status": "success", "result": res}
 
+@app.get("/api/v1/healthz")
+@app.get("/healthz")
+@app.get("/health")
+@app.get("/api/health")
+@app.get("/api/healthz")
+async def health_check():
+    return {"status": "ok", "service": "omnilead"}
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_dashboard():
     template_path = f"{BASE_DIR}/web/templates/index.html"
